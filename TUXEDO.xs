@@ -5,1610 +5,1601 @@
 #include <atmi.h>
 #include <fml32.h>
 #include <fml.h>
+#include <tx.h>
+#include <xa.h>
+#include <Usignal.h>
+#include <userlog.h>
 
-static int
-not_here(char *s)
-{
-    croak("%s not implemented on this architecture", s);
-    return -1;
-}
+void InitTuxedoConstants();
+long getTuxedoConstant( char *name );
 
-static double
-constant(char *name, int arg)
+typedef char *          CHAR_PTR;
+typedef TPINIT *        TPINIT_PTR;
+typedef FBFR32 *        FBFR32_PTR;
+typedef CLIENTID *      CLIENTID_PTR;
+typedef TPTRANID *      TPTRANID_PTR;
+typedef XID *           XID_PTR;
+typedef TPQCTL *        TPQCTL_PTR;
+typedef TPEVCTL *       TPEVCTL_PTR;
+typedef TXINFO *        TXINFO_PTR;
+
+static HV * UnsolicitedHandlerMap = (HV *)NULL;
+
+static void
+unsolicited_message_handler( data, len, flags )
+    char * data;
+    long len;
+    long flags;
 {
-    errno = 0;
-    switch (*name) {
-    case 'A':
-	if (strEQ(name, "ATMI_H"))
-#ifdef ATMI_H
-	    return ATMI_H;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'B':
-	if (strEQ(name, "BADFLDID"))
-#ifdef BADFLDID
-	    return BADFLDID;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'C':
-	break;
-    case 'D':
-	break;
-    case 'E':
-	break;
-    case 'F':
-	if (strEQ(name, "FADD"))
-#ifdef FADD
-	    return FADD;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FALIGNERR"))
-#ifdef FALIGNERR
-	    return FALIGNERR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FBADACM"))
-#ifdef FBADACM
-	    return FBADACM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FBADFLD"))
-#ifdef FBADFLD
-	    return FBADFLD;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FBADNAME"))
-#ifdef FBADNAME
-	    return FBADNAME;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FBADTBL"))
-#ifdef FBADTBL
-	    return FBADTBL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FBADVIEW"))
-#ifdef FBADVIEW
-	    return FBADVIEW;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FCONCAT"))
-#ifdef FCONCAT
-	    return FCONCAT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FDEL"))
-#ifdef FDEL
-	    return FDEL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FEINVAL"))
-#ifdef FEINVAL
-	    return FEINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FEUNIX"))
-#ifdef FEUNIX
-	    return FEUNIX;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FFTOPEN"))
-#ifdef FFTOPEN
-	    return FFTOPEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FFTSYNTAX"))
-#ifdef FFTSYNTAX
-	    return FFTSYNTAX;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FIRSTFLDID"))
-#ifdef FIRSTFLDID
-	    return FIRSTFLDID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FJOIN"))
-#ifdef FJOIN
-	    return FJOIN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_CARRAY"))
-#ifdef FLD_CARRAY
-	    return FLD_CARRAY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_CHAR"))
-#ifdef FLD_CHAR
-	    return FLD_CHAR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_DOUBLE"))
-#ifdef FLD_DOUBLE
-	    return FLD_DOUBLE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_FLOAT"))
-#ifdef FLD_FLOAT
-	    return FLD_FLOAT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_LONG"))
-#ifdef FLD_LONG
-	    return FLD_LONG;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_SHORT"))
-#ifdef FLD_SHORT
-	    return FLD_SHORT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_STRING"))
-#ifdef FLD_STRING
-	    return FLD_STRING;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_FML32"))
-#ifdef FLD_FML32
-	    return FLD_FML32;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_PTR"))
-#ifdef FLD_PTR
-	    return FLD_PTR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FLD_VIEW32"))
-#ifdef FLD_VIEW32
-	    return FLD_VIEW32;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FMALLOC"))
-#ifdef FMALLOC
-	    return FMALLOC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FMAXNULLSIZE"))
-#ifdef FMAXNULLSIZE
-	    return FMAXNULLSIZE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FMAXVAL"))
-#ifdef FMAXVAL
-	    return FMAXVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FMINVAL"))
-#ifdef FMINVAL
-	    return FMINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FML32_H"))
-#ifdef FML32_H
-	    return FML32_H;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FMLMOD"))
-#ifdef FMLMOD
-	    return FMLMOD;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FNOCNAME"))
-#ifdef FNOCNAME
-	    return FNOCNAME;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FNOSPACE"))
-#ifdef FNOSPACE
-	    return FNOSPACE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FNOTFLD"))
-#ifdef FNOTFLD
-	    return FNOTFLD;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FNOTPRES"))
-#ifdef FNOTPRES
-	    return FNOTPRES;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FOJOIN"))
-#ifdef FOJOIN
-	    return FOJOIN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FSTDXINT"))
-#ifdef FSTDXINT
-	    return FSTDXINT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FSYNTAX"))
-#ifdef FSYNTAX
-	    return FSYNTAX;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FTYPERR"))
-#ifdef FTYPERR
-	    return FTYPERR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FUPDATE"))
-#ifdef FUPDATE
-	    return FUPDATE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FVFOPEN"))
-#ifdef FVFOPEN
-	    return FVFOPEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FVFSYNTAX"))
-#ifdef FVFSYNTAX
-	    return FVFSYNTAX;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FVIEWCACHESIZE"))
-#ifdef FVIEWCACHESIZE
-	    return FVIEWCACHESIZE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "FVIEWNAMESIZE"))
-#ifdef FVIEWNAMESIZE
-	    return FVIEWNAMESIZE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_BOTH"))
-#ifdef F_BOTH
-	    return F_BOTH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_COUNT"))
-#ifdef F_COUNT
-	    return F_COUNT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_FTOS"))
-#ifdef F_FTOS
-	    return F_FTOS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_LENGTH"))
-#ifdef F_LENGTH
-	    return F_LENGTH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_NONE"))
-#ifdef F_NONE
-	    return F_NONE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_OFF"))
-#ifdef F_OFF
-	    return F_OFF;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_OFFSET"))
-#ifdef F_OFFSET
-	    return F_OFFSET;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_PROP"))
-#ifdef F_PROP
-	    return F_PROP;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_SIZE"))
-#ifdef F_SIZE
-	    return F_SIZE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "F_STOF"))
-#ifdef F_STOF
-	    return F_STOF;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "Ferror32"))
-#ifdef Ferror32
-	    return Ferror32;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'G':
-	break;
-    case 'H':
-	break;
-    case 'I':
-	break;
-    case 'J':
-	break;
-    case 'K':
-	break;
-    case 'L':
-	break;
-    case 'M':
-	if (strEQ(name, "MAXFBLEN32"))
-#ifdef MAXFBLEN32
-	    return MAXFBLEN32;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "MAXTIDENT"))
-#ifdef MAXTIDENT
-	    return MAXTIDENT;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'N':
-	break;
-    case 'O':
-	break;
-    case 'P':
-	break;
-    case 'Q':
-	if (strEQ(name, "QMEABORTED"))
-#ifdef QMEABORTED
-	    return QMEABORTED;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEBADMSGID"))
-#ifdef QMEBADMSGID
-	    return QMEBADMSGID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEBADQUEUE"))
-#ifdef QMEBADQUEUE
-	    return QMEBADQUEUE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEBADRMID"))
-#ifdef QMEBADRMID
-	    return QMEBADRMID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEINUSE"))
-#ifdef QMEINUSE
-	    return QMEINUSE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEINVAL"))
-#ifdef QMEINVAL
-	    return QMEINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMENOMSG"))
-#ifdef QMENOMSG
-	    return QMENOMSG;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMENOSPACE"))
-#ifdef QMENOSPACE
-	    return QMENOSPACE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMENOTA"))
-#ifdef QMENOTA
-	    return QMENOTA;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMENOTOPEN"))
-#ifdef QMENOTOPEN
-	    return QMENOTOPEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEOS"))
-#ifdef QMEOS
-	    return QMEOS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMEPROTO"))
-#ifdef QMEPROTO
-	    return QMEPROTO;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMESYSTEM"))
-#ifdef QMESYSTEM
-	    return QMESYSTEM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "QMETRAN"))
-#ifdef QMETRAN
-	    return QMETRAN;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'R':
-	if (strEQ(name, "RESERVED_BIT1"))
-#ifdef RESERVED_BIT1
-	    return RESERVED_BIT1;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'S':
-	break;
-    case 'T':
-	if (strEQ(name, "TMCORRIDLEN"))
-#ifdef TMCORRIDLEN
-	    return TMCORRIDLEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TMMSGIDLEN"))
-#ifdef TMMSGIDLEN
-	    return TMMSGIDLEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TMQNAMELEN"))
-#ifdef TMQNAMELEN
-	    return TMQNAMELEN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TMSRVRFLAG_COBOL"))
-#ifdef TMSRVRFLAG_COBOL
-	    return TMSRVRFLAG_COBOL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPABSOLUTE"))
-#ifdef TPABSOLUTE
-	    return TPABSOLUTE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPACK"))
-#ifdef TPACK
-	    return TPACK;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPAPPAUTH"))
-#ifdef TPAPPAUTH
-	    return TPAPPAUTH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPCONV"))
-#ifdef TPCONV
-	    return TPCONV;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPCONVCLTID"))
-#ifdef TPCONVCLTID
-	    return TPCONVCLTID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPCONVMAXSTR"))
-#ifdef TPCONVMAXSTR
-	    return TPCONVMAXSTR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPCONVTRANID"))
-#ifdef TPCONVTRANID
-	    return TPCONVTRANID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPCONVXID"))
-#ifdef TPCONVXID
-	    return TPCONVXID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEABORT"))
-#ifdef TPEABORT
-	    return TPEABORT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEBADDESC"))
-#ifdef TPEBADDESC
-	    return TPEBADDESC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEBLOCK"))
-#ifdef TPEBLOCK
-	    return TPEBLOCK;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEDIAGNOSTIC"))
-#ifdef TPEDIAGNOSTIC
-	    return TPEDIAGNOSTIC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPED_MAXVAL"))
-#ifdef TPED_MAXVAL
-	    return TPED_MAXVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPED_MINVAL"))
-#ifdef TPED_MINVAL
-	    return TPED_MINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPED_SVCTIMEOUT"))
-#ifdef TPED_SVCTIMEOUT
-	    return TPED_SVCTIMEOUT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPED_TERM"))
-#ifdef TPED_TERM
-	    return TPED_TERM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEEVENT"))
-#ifdef TPEEVENT
-	    return TPEEVENT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEHAZARD"))
-#ifdef TPEHAZARD
-	    return TPEHAZARD;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEHEURISTIC"))
-#ifdef TPEHEURISTIC
-	    return TPEHEURISTIC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEINVAL"))
-#ifdef TPEINVAL
-	    return TPEINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEITYPE"))
-#ifdef TPEITYPE
-	    return TPEITYPE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPELIMIT"))
-#ifdef TPELIMIT
-	    return TPELIMIT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEMATCH"))
-#ifdef TPEMATCH
-	    return TPEMATCH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEMIB"))
-#ifdef TPEMIB
-	    return TPEMIB;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPENOENT"))
-#ifdef TPENOENT
-	    return TPENOENT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEOS"))
-#ifdef TPEOS
-	    return TPEOS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEOTYPE"))
-#ifdef TPEOTYPE
-	    return TPEOTYPE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEPERM"))
-#ifdef TPEPERM
-	    return TPEPERM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEPROTO"))
-#ifdef TPEPROTO
-	    return TPEPROTO;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPERELEASE"))
-#ifdef TPERELEASE
-	    return TPERELEASE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPERMERR"))
-#ifdef TPERMERR
-	    return TPERMERR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPESVCERR"))
-#ifdef TPESVCERR
-	    return TPESVCERR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPESVCFAIL"))
-#ifdef TPESVCFAIL
-	    return TPESVCFAIL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPESYSTEM"))
-#ifdef TPESYSTEM
-	    return TPESYSTEM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPETIME"))
-#ifdef TPETIME
-	    return TPETIME;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPETRAN"))
-#ifdef TPETRAN
-	    return TPETRAN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEVPERSIST"))
-#ifdef TPEVPERSIST
-	    return TPEVPERSIST;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEVQUEUE"))
-#ifdef TPEVQUEUE
-	    return TPEVQUEUE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEVSERVICE"))
-#ifdef TPEVSERVICE
-	    return TPEVSERVICE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEVTRAN"))
-#ifdef TPEVTRAN
-	    return TPEVTRAN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEV_DISCONIMM"))
-#ifdef TPEV_DISCONIMM
-	    return TPEV_DISCONIMM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEV_SENDONLY"))
-#ifdef TPEV_SENDONLY
-	    return TPEV_SENDONLY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEV_SVCERR"))
-#ifdef TPEV_SVCERR
-	    return TPEV_SVCERR;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEV_SVCFAIL"))
-#ifdef TPEV_SVCFAIL
-	    return TPEV_SVCFAIL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEV_SVCSUCC"))
-#ifdef TPEV_SVCSUCC
-	    return TPEV_SVCSUCC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPEXIT"))
-#ifdef TPEXIT
-	    return TPEXIT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPFAIL"))
-#ifdef TPFAIL
-	    return TPFAIL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPGETANY"))
-#ifdef TPGETANY
-	    return TPGETANY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPGOTSIG"))
-#ifdef TPGOTSIG
-	    return TPGOTSIG;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPMAXVAL"))
-#ifdef TPMAXVAL
-	    return TPMAXVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPMINVAL"))
-#ifdef TPMINVAL
-	    return TPMINVAL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPMULTICONTEXTS"))
-#ifdef TPMULTICONTEXTS
-	    return TPMULTICONTEXTS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOAUTH"))
-#ifdef TPNOAUTH
-	    return TPNOAUTH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOBLOCK"))
-#ifdef TPNOBLOCK
-	    return TPNOBLOCK;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOCHANGE"))
-#ifdef TPNOCHANGE
-	    return TPNOCHANGE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOFLAGS"))
-#ifdef TPNOFLAGS
-	    return TPNOFLAGS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOREPLY"))
-#ifdef TPNOREPLY
-	    return TPNOREPLY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOTIME"))
-#ifdef TPNOTIME
-	    return TPNOTIME;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPNOTRAN"))
-#ifdef TPNOTRAN
-	    return TPNOTRAN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQBEFOREMSGID"))
-#ifdef TPQBEFOREMSGID
-	    return TPQBEFOREMSGID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQCORRID"))
-#ifdef TPQCORRID
-	    return TPQCORRID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQFAILUREQ"))
-#ifdef TPQFAILUREQ
-	    return TPQFAILUREQ;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQGETBYCORRID"))
-#ifdef TPQGETBYCORRID
-	    return TPQGETBYCORRID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQGETBYMSGID"))
-#ifdef TPQGETBYMSGID
-	    return TPQGETBYMSGID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQMSGID"))
-#ifdef TPQMSGID
-	    return TPQMSGID;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQPEEK"))
-#ifdef TPQPEEK
-	    return TPQPEEK;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQPRIORITY"))
-#ifdef TPQPRIORITY
-	    return TPQPRIORITY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQREPLYQ"))
-#ifdef TPQREPLYQ
-	    return TPQREPLYQ;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQTIME_ABS"))
-#ifdef TPQTIME_ABS
-	    return TPQTIME_ABS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQTIME_REL"))
-#ifdef TPQTIME_REL
-	    return TPQTIME_REL;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQTOP"))
-#ifdef TPQTOP
-	    return TPQTOP;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPQWAIT"))
-#ifdef TPQWAIT
-	    return TPQWAIT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPRECVONLY"))
-#ifdef TPRECVONLY
-	    return TPRECVONLY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSA_FASTPATH"))
-#ifdef TPSA_FASTPATH
-	    return TPSA_FASTPATH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSA_PROTECTED"))
-#ifdef TPSA_PROTECTED
-	    return TPSA_PROTECTED;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSENDONLY"))
-#ifdef TPSENDONLY
-	    return TPSENDONLY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSIGRSTRT"))
-#ifdef TPSIGRSTRT
-	    return TPSIGRSTRT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSUCCESS"))
-#ifdef TPSUCCESS
-	    return TPSUCCESS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPSYSAUTH"))
-#ifdef TPSYSAUTH
-	    return TPSYSAUTH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPTOSTRING"))
-#ifdef TPTOSTRING
-	    return TPTOSTRING;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPTRAN"))
-#ifdef TPTRAN
-	    return TPTRAN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPU_DIP"))
-#ifdef TPU_DIP
-	    return TPU_DIP;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPU_IGN"))
-#ifdef TPU_IGN
-	    return TPU_IGN;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPU_MASK"))
-#ifdef TPU_MASK
-	    return TPU_MASK;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TPU_SIG"))
-#ifdef TPU_SIG
-	    return TPU_SIG;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TP_CMT_COMPLETE"))
-#ifdef TP_CMT_COMPLETE
-	    return TP_CMT_COMPLETE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "TP_CMT_LOGGED"))
-#ifdef TP_CMT_LOGGED
-	    return TP_CMT_LOGGED;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'U':
-	break;
-    case 'V':
-	break;
-    case 'W':
-	break;
-    case 'X':
-	if (strEQ(name, "XATMI_SERVICE_NAME_LENGTH"))
-#ifdef XATMI_SERVICE_NAME_LENGTH
-	    return XATMI_SERVICE_NAME_LENGTH;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'Y':
-	break;
-    case 'Z':
-	break;
-    case 'a':
-	break;
-    case 'b':
-	break;
-    case 'c':
-	break;
-    case 'd':
-	break;
-    case 'e':
-	break;
-    case 'f':
-	break;
-    case 'g':
-	break;
-    case 'h':
-	break;
-    case 'i':
-	break;
-    case 'j':
-	break;
-    case 'k':
-	break;
-    case 'l':
-	break;
-    case 'm':
-	break;
-    case 'n':
-	break;
-    case 'o':
-	break;
-    case 'p':
-	break;
-    case 'q':
-	break;
-    case 'r':
-	break;
-    case 's':
-	break;
-    case 't':
-	break;
-    case 'u':
-	break;
-    case 'v':
-	break;
-    case 'w':
-	break;
-    case 'x':
-	break;
-    case 'y':
-	break;
-    case 'z':
-	break;
-    case '_':
-	if (strEQ(name, "_FLDID32"))
-#ifdef _FLDID32
-	    return _FLDID32;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "_QADDON"))
-#ifdef _QADDON
-	    return _QADDON;
-#else
-	    goto not_there;
-#endif
-	break;
+    long context = 0;
+    long nullContext = TPNULLCONTEXT;
+    int rval;
+    dSP ;
+    SV ** sv;
+
+    /* get the context */
+    rval = tpgetctxt( &context, 0 );
+
+    /* get the callback handler associated with this context */
+    sv = hv_fetch( UnsolicitedHandlerMap, 
+                   (char *)&context,
+                   sizeof(context),
+                   FALSE
+                   );
+
+    if ( sv == (SV**)NULL )
+    {
+        /* should search for the TPNULLCONTEXT entry */
+        sv = hv_fetch( UnsolicitedHandlerMap, 
+                       (char *)&nullContext,
+                       sizeof(nullContext),
+                       FALSE
+                       );
+
+        if ( sv == (SV**)NULL )
+            croak( "Could not find unsolicted message handler for context %d "
+                   " or the NULL context.\n",
+                   context
+                   );
     }
-    errno = EINVAL;
-    return 0;
 
-not_there:
-    errno = ENOENT;
-    return 0;
+    PUSHMARK( SP );
+    XPUSHs( newRV_inc( sv_2mortal(newSViv((IV)data)) ) );
+    XPUSHs( sv_2mortal(newSViv(len)) );
+    XPUSHs( sv_2mortal(newSViv(flags) ) );
+    PUTBACK ;
+
+    /* call the Perl sub */
+    perl_call_sv( *sv, G_DISCARD );
 }
 
 
-MODULE = TUXEDO		PACKAGE = TUXEDO		
+static HV * SignalHandlerMap = (HV *)NULL;
 
-double
-constant(name,arg)
-	char *		name
-	int		arg
+static void
+signal_handler( sig_num )
+    int sig_num;
+{
+    dSP ;
+    SV ** sv;
 
-SV*
-tpalloc(type,subtype,size)
-	char *type
-	char *subtype
-	long size
-	PREINIT:
-	char *tuxbfr;
-	CODE:
-	tuxbfr = tpalloc(type,subtype,size);
-	ST(0) = sv_newmortal();
-	sv_setiv((SV*)ST(0), (IV)tuxbfr);
+    /* get the callback handler associated with this context */
+    sv = hv_fetch( SignalHandlerMap, 
+                   (char *)&sig_num,
+                   sizeof(sig_num),
+                   FALSE
+                   );
 
-SV*
-tprealloc(ptr,size)
-	SV *ptr
-	long size
-	PREINIT:
-	char *tuxbfr = (char *)SvIV(ptr);
-	CODE:
-	tuxbfr = tprealloc(tuxbfr,size);
-	ST(0) = sv_newmortal();
-	sv_setiv((SV*)ST(0), (IV)tuxbfr);
+    if ( sv == (SV**)NULL )
+        croak( "Could not find signal handler for signal %d.\n",
+               sig_num
+               );
 
-void
-tpfree(ptr)
-	SV *ptr;
-	PREINIT:
-	char *tuxbfr = (char *)SvIV(ptr);
-	CODE:
-	tpfree(tuxbfr);
+    PUSHMARK( SP );
+    XPUSHs( sv_2mortal(newSViv(sig_num)) );
+    PUTBACK ;
+
+    /* call the Perl sub */
+    perl_call_sv( *sv, G_DISCARD );
+}
+    
+
+MODULE = TUXEDO    PACKAGE = TUXEDO        
+
+BOOT:
+    InitTuxedoConstants();
 
 long
-tptypes(ptr,type,subtype)
-	SV* ptr
-	SV* type
-	SV* subtype
-	PREINIT:
-	char _type[8];
-	char _subtype[16];
-	char *tuxbfr = (char *)SvIV(ptr);
-	CODE:
-	RETVAL = tptypes(tuxbfr,_type,_subtype);
-	sv_setpv(type,_type);
-	sv_setpv(subtype,_subtype);
-	OUTPUT:
-	RETVAL
-
-void
-tpreturn(rval,rcode,data,len,flags)
-	int rval
-	long rcode
-	SV* data
-	long len
-	long flags
-	PREINIT:
-	char *tuxbfr = (char *)SvIV(data);
-	CODE:
-	tpreturn( rval, rcode, tuxbfr, len, flags );
-
-int
-AddField(fbfr,fname,value,len=0)
-	SV* fbfr
-	char * fname
-	SV* value
-	long len
-	PREINIT:
-	char *val;
-	int rval;
-	int ftype;
-	unsigned long fieldid;
-	char *convloc;
-	FLDLEN convlen;
-	long required_space;
-	long new_size;
-	long current_size;
-	char *newbuf;
-	FBFR *tuxbfr = (FBFR *)SvIV(fbfr);
-	CODE:
-	fieldid = Fldid(fname);
-	if ( fieldid )
-	{
-		val = SvPV(value, PL_na);
-		ftype = len ? FLD_CARRAY : FLD_STRING;
-		RETVAL = CFadd( tuxbfr, fieldid, val, len, ftype );
-		if ( RETVAL == -1 )
-		{
-			if ( Ferror == FNOSPACE )
-			{
-				convloc = Ftypcvt( &convlen, Fldtype(fieldid), val, ftype, len );
-				required_space = Fneeded( 1, convlen );
-				
-				current_size = tptypes( (char *)tuxbfr, 0, 0 );
-				new_size = current_size + required_space + 512;
-				newbuf = tprealloc( (char *)tuxbfr, new_size );
-				if ( newbuf )
-				{
-					tuxbfr = (FBFR *)newbuf;
-					sv_setiv(fbfr,(IV)tuxbfr);
-					/* try to add the value again */
-					RETVAL = CFadd( tuxbfr, fieldid, val, len, ftype );
-				}
-			} 
-		} 
-	}
-	else
-		RETVAL = -1;
-	OUTPUT:
-	RETVAL
-
-
-int
-SetField(fbfr,fname,occ,value,len=0)
-	SV* fbfr
-	char * fname
-	SV* value
-	unsigned long occ
-	long len
-	PREINIT:
-	char *val;
-	int rval;
-	int ftype;
-	unsigned long fieldid;
-	char *convloc;
-	FLDLEN convlen;
-	long required_space;
-	long new_size;
-	long current_size;
-	char *newbuf;
-	FBFR *tuxbfr = (FBFR *)SvIV(fbfr);
-	CODE:
-	fieldid = Fldid(fname);
-	if ( fieldid )
-	{
-		val = SvPV(value, PL_na);
-		ftype = len ? FLD_CARRAY : FLD_STRING;
-		RETVAL = CFchg( tuxbfr, fieldid, occ, val, len, ftype );
-		if ( RETVAL == -1 )
-		{
-			if ( Ferror == FNOSPACE )
-			{
-				convloc = Ftypcvt( &convlen, Fldtype(fieldid), val, ftype, len );
-				required_space = Fneeded( 1, convlen );
-				
-				current_size = tptypes( (char *)tuxbfr, 0, 0 );
-				new_size = current_size + required_space + 512;
-				newbuf = tprealloc( (char *)tuxbfr, new_size );
-				if ( newbuf )
-				{
-					tuxbfr = (FBFR *)newbuf;
-					sv_setiv(fbfr,(IV)tuxbfr);
-					/* try to add the value again */
-					RETVAL = CFchg( tuxbfr, fieldid, occ, val, len, ftype );
-				}
-			} 
-		} 
-	}
-	else
-		RETVAL = -1;
-	OUTPUT:
-	RETVAL
-
-
-SV*
-GetField(fbfr,field,oc)
-	SV* fbfr
-	SV* field
-	long oc
-	PREINIT:
-	char *val;
-	unsigned long fid;
-	FLDLEN flen;
-	FBFR *tuxbfr = (FBFR *)SvIV(fbfr);
-	CODE:
-	if ( SvIOK(field) )
-		fid = (unsigned long)SvIV(field);
-	else if ( SvNOK(field) )
-		fid = (unsigned long)SvNV(field);
-	else
-		fid = Fldid( SvPV(field,PL_na) );
-	
-	val = CFfind(tuxbfr, fid, oc, &flen, FLD_STRING);
-	if ( !val ) val = "";
-	ST(0) = sv_newmortal();
-	sv_setpv((SV*)ST(0), val);
-
-
-int
-AddField32(fbfr,fname,value,len=0)
-	SV* fbfr
-	char * fname
-	SV* value
-	long len
-	PREINIT:
-	char *val;
-	int rval;
-	int ftype;
-	FLDID32 fieldid;
-	char *convloc;
-	FLDLEN32 convlen;
-	long required_space;
-	long new_size;
-	long current_size;
-	char *newbuf;
-	FBFR32 *tuxbfr = (FBFR32 *)SvIV(fbfr);
-	CODE:
-	fieldid = Fldid32(fname);
-	if ( fieldid )
-	{
-		val = SvPV(value, PL_na);
-		ftype = len ? FLD_CARRAY : FLD_STRING;
-		RETVAL = CFadd32( tuxbfr, fieldid, val, len, ftype );
-		if ( RETVAL == -1 )
-		{
-			if ( Ferror32 == FNOSPACE )
-			{
-				convloc = Ftypcvt32( &convlen, Fldtype32(fieldid), val, ftype, len );
-				required_space = Fneeded32( 1, convlen );
-				
-				current_size = tptypes( (char *)tuxbfr, 0, 0 );
-				new_size = current_size + required_space + 512;
-				newbuf = tprealloc( (char *)tuxbfr, new_size );
-				if ( newbuf )
-				{
-					tuxbfr = (FBFR32 *)newbuf;
-					sv_setiv(fbfr,(IV)tuxbfr);
-					/* try to add the value again */
-					RETVAL = CFadd32( tuxbfr, fieldid, val, len, ftype );
-				}
-			} 
-		} 
-	}
-	else
-		RETVAL = -1;
-	OUTPUT:
-	RETVAL
-
-
-int
-SetField32(fbfr,fname,occ,value,len=0)
-	SV* fbfr
-	char * fname
-	SV* value
-	unsigned long occ
-	long len
-	PREINIT:
-	char *val;
-	int rval;
-	int ftype;
-	FLDID32 fieldid;
-	char *convloc;
-	FLDLEN32 convlen;
-	long required_space;
-	long new_size;
-	long current_size;
-	char *newbuf;
-	FBFR32 *tuxbfr = (FBFR32 *)SvIV(fbfr);
-	CODE:
-	fieldid = Fldid32(fname);
-	if ( fieldid )
-	{
-		val = SvPV(value, PL_na);
-		ftype = len ? FLD_CARRAY : FLD_STRING;
-		RETVAL = CFchg32( tuxbfr, fieldid, occ, val, len, ftype );
-		if ( RETVAL == -1 )
-		{
-			if ( Ferror32 == FNOSPACE )
-			{
-				convloc = Ftypcvt32( &convlen, Fldtype32(fieldid), val, ftype, len );
-				required_space = Fneeded32( 1, convlen );
-				
-				current_size = tptypes( (char *)tuxbfr, 0, 0 );
-				new_size = current_size + required_space + 512;
-				newbuf = tprealloc( (char *)tuxbfr, new_size );
-				if ( newbuf )
-				{
-					tuxbfr = (FBFR32 *)newbuf;
-					sv_setiv(fbfr,(IV)tuxbfr);
-					/* try to add the value again */
-					RETVAL = CFchg32( tuxbfr, fieldid, occ, val, len, ftype );
-				}
-			} 
-		} 
-	}
-	else
-		RETVAL = -1;
-	OUTPUT:
-	RETVAL
-
-
-SV*
-GetField32(fbfr,field,oc)
-	SV* fbfr
-	SV* field
-	long oc
-	PREINIT:
-	char *val;
-	FLDID32 fid;
-	FLDLEN32 flen;
-	FBFR32 *tuxbfr = (FBFR32 *)SvIV(fbfr);
-	CODE:
-	if ( SvIOK(field) )
-		fid = (unsigned long)SvIV(field);
-	else if ( SvNOK(field) )
-		fid = (unsigned long)SvNV(field);
-	else
-		fid = Fldid32( SvPV(field,PL_na) );
-	
-	val = CFfind32(tuxbfr, fid, oc, &flen, FLD_STRING);
-	if ( !val ) val = "";
-	ST(0) = sv_newmortal();
-	sv_setpv((SV*)ST(0), val);
-
-int
-tpinit(tpinitbfr)
-	SV *tpinitbfr
-	PREINIT:
-	TPINIT *ibfr = (TPINIT *)SvIV(tpinitbfr);
-	CODE:
-	RETVAL = tpinit(ibfr);
-	OUTPUT:
-	RETVAL
-
-void
-tpterm()
-	CODE:
-	tpterm();
-
-int
-tpcall(svc,idata,ilen,odata,olen,flags)
-	char *svc
-	SV* idata
-	long ilen
-	SV* odata
-	long &olen
-	long flags
-	PREINIT:
-	char *ibfr = (char *)SvIV(idata);
-	char *obfr = (char *)SvIV(odata);
-	CODE:
-	RETVAL = tpcall(svc,ibfr,ilen,&obfr,&olen,flags);
-	sv_setiv(odata,(IV)obfr);
-	OUTPUT:
-	RETVAL
-	olen
-
-int
-Fprint32(fbfr)
-	SV*	fbfr
-	PREINIT:
-	FBFR32 *tuxbfr = (FBFR32 *)SvIV(fbfr);
-	CODE:
-	RETVAL = Fprint32(tuxbfr);
-	OUTPUT:
-	RETVAL
-
-unsigned long
-Fmkfldid32(fldtype,fldnum)
-    int fldtype
-    unsigned long fldnum
+constant( name, arg )
+    char * name
+    int arg
     CODE:
-    RETVAL = Fmkfldid32( fldtype, fldnum );
+        RETVAL = getTuxedoConstant( name );
     OUTPUT:
-    RETVAL
+        RETVAL
 
-int 
-SetTpinitField(tpinitbfr,field,value)
-	SV*	tpinitbfr
-	int	field
-	char *value
-	PREINIT:
-	long datasize;
-	long currentsize;
-	char *newbuf;
-	TPINIT *tuxbfr = (TPINIT *)SvIV(tpinitbfr);
-	CODE:
-	RETVAL = 1;
-	switch ( field )
-	{
-		case 1: /* usrname */ 
-					strncpy( tuxbfr->usrname, value, MAXTIDENT + 2 );
-					break;
-		case 2: /* clientname */ 
-					strncpy( tuxbfr->cltname, value, MAXTIDENT + 2 );
-					break;
-		case 3: /* password */ 
-					strncpy( tuxbfr->passwd, value, MAXTIDENT + 2 );
-					break;
-		case 4: /* data */ 
-					datasize = strlen( value ) + 1;
-					currentsize = tptypes( (char *)tuxbfr, 0, 0 );
-					if ( currentsize < (long)TPINITNEED(datasize) )
-					{
-						/* attempt to reallocate the buffer */
-						newbuf = tprealloc( (char *)tuxbfr, (long)TPINITNEED(datasize) );
-						if ( !newbuf )
-						{
-							RETVAL = 0;
-							break;
-						}
-						tuxbfr = (TPINIT *)newbuf;
-						sv_setiv(tpinitbfr,(IV)tuxbfr);
-					}
-					memcpy( (char *)&tuxbfr->data, value, datasize );
-					break;
-		case 5: /* flags */ 
-					tuxbfr->flags = atoi(value);
-					break;
-		default:
-					RETVAL = 0;
-					break;
-	} /* end switch */
-	OUTPUT:
-	RETVAL
+long
+TPINITNEED( datalen )
+    long datalen
+    CODE:
+        RETVAL = TPINITNEED( datalen );
+    OUTPUT:
+        RETVAL
 
-char * 
-GetTpinitField(tpinitbfr,field)
-	SV*	tpinitbfr
-	int	field
-	PREINIT:
-	TPINIT *tuxbfr = (TPINIT *)SvIV(tpinitbfr);
-	CODE:
-	RETVAL = "";
-	switch ( field )
-	{
-		case 1: /* usrname */ 
-					RETVAL = tuxbfr->usrname;
-					break;
-		case 2: /* clientname */ 
-					RETVAL = tuxbfr->cltname;
-					break;
-		case 3: /* password */ 
-					RETVAL = tuxbfr->passwd;
-					break;
-		case 4: /* data */ 
-					RETVAL = (char *)&tuxbfr->data;
-					break;
-		case 5: /* flags */ 
+int
+tpabort( flags )
+    long flags
+
+void
+tpalloc(type,subtype,size)
+    char *type
+    char *subtype
+    long size
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = tpalloc( type, subtype, size );
+        ST(0) = sv_newmortal();
+        if ( ptr )
+        {
+            if ( !strcmp(type, "TPINIT") )
+                sv_setref_pv(ST(0), "TPINIT_PTR", (void*)ptr);
+            else if ( !strcmp(type, "FML32") )
+                sv_setref_pv(ST(0), "FBFR32_PTR", (void*)ptr);
+            else
+                sv_setref_pv(ST(0), Nullch, (void*)ptr);
+        }
+        else
+        {
+            ST(0) = &PL_sv_undef;
+        }
+
+int
+tpbegin( timeout, flags )
+    unsigned long timeout
+    long flags
+
+int
+tpbroadcast( lmid, usrname, cltname, data, len, flags )
+    SV * lmid
+    SV * usrname
+    SV * cltname
+    SV * data
+    long len
+    long flags
+    PREINIT:
+    char * lmid_    = NULL;
+    char * usrname_ = NULL;
+    char * cltname_ = NULL;
+    CHAR_PTR data_  = NULL;
+    STRLEN  n_a;
+    CODE:
+        if ( lmid != &PL_sv_undef )
+        {
+            if ( !SvPOK(lmid) )
+	        croak("lmid is not a string");
+            lmid_ = SvPV( lmid, n_a );
+        }
+
+        if ( usrname != &PL_sv_undef )
+        {
+            if ( !SvPOK(usrname) )
+	        croak("usrname is not a string");
+            usrname_ = SvPV( usrname, n_a );
+        }
+
+        if ( cltname != &PL_sv_undef )
+        {
+            if ( !SvPOK(cltname) )
+	        croak("cltname is not a string");
+            cltname_ = SvPV( cltname, n_a );
+        }
+
+        if ( data != &PL_sv_undef )
+        {
+            if (!SvROK(data)) 
+                croak("data is not a reference");
+            data_ = (CHAR_PTR)SvIV((SV*)SvRV(data));
+        }
+
+        RETVAL = tpbroadcast( lmid_, usrname_, cltname_, data_, len, flags );
+
+    OUTPUT:
+        RETVAL
+
+int
+tpcancel( cd )
+    int cd
+
+int
+tpchkauth()
+
+int
+tpchkunsol()
+
+int
+tpclose()
+
+int
+tpcommit( flags )
+    long flags
+
+int
+tpconnect( svc, data, len, flags )
+    char * svc
+    SV * data
+    long len
+    long flags
+    PREINIT:
+        CHAR_PTR data_  = NULL;
+    CODE:
+        if ( data != &PL_sv_undef )
+        {
+            if (!SvROK(data)) 
+                croak("data is not a reference");
+            data_ = (CHAR_PTR)SvIV((SV*)SvRV(data));
+        }
+
+        RETVAL = tpconnect( svc, data_, len, flags );
+    OUTPUT:
+        RETVAL
+
+int
+tpconvert( strrep, binrep, flags )
+    SV * strrep
+    SV * binrep
+    long flags
+    PREINIT:
+        char * strrep_ = NULL;
+        char * binrep_ = NULL;
+        char tostring[TPCONVMAXSTR + 1];
+        STRLEN    n_a;
+    CODE:
+        if ( flags & TPTOSTRING )
+        {
+            // binrep is the source, strrep is the dest
+            if (!SvROK(binrep)) 
+                croak("binrep is not a reference");
+            binrep_ = (CHAR_PTR)SvIV((SV*)SvRV(binrep));
+            RETVAL = tpconvert( tostring, binrep_, flags );
+            sv_setpv( strrep, tostring );
+        }
+        else
+        {
+            // strrep is the source, binrep is the dest
+            if ( !SvPOK(strrep) )
+	        croak("strrep is not a string");
+            strrep_ = SvPV( strrep, n_a );
+
+            if ( flags & TPCONVCLTID )
+            {
+                if ( SvROK(binrep) && sv_isa(binrep, "CLIENTID_PTR") )
+                {
+                    binrep_ = (CHAR_PTR)SvIV((SV*)SvRV(binrep));
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                }
+                else
+                {
+                    binrep_ = calloc( 1, sizeof(CLIENTID) );
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                    sv_setref_pv( binrep, "CLIENTID_PTR", binrep_ );
+                }
+            }
+
+            else if ( flags & TPCONVTRANID )
+            {
+                if ( SvROK(binrep) && sv_isa(binrep, "TPTRANID_PTR") )
+                {
+                    binrep_ = (CHAR_PTR)SvIV((SV*)SvRV(binrep));
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                }
+                else
+                {
+                    binrep_ = calloc( 1, sizeof(TPTRANID) );
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                    sv_setref_pv( binrep, "TPTRANID_PTR", binrep_ );
+                }
+            }
+
+            else if ( flags & TPCONVXID )
+            {
+                if ( SvROK(binrep) && sv_isa(binrep, "XID_PTR") )
+                {
+                    binrep_ = (CHAR_PTR)SvIV((SV*)SvRV(binrep));
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                }
+                else
+                {
+                    binrep_ = calloc( 1, sizeof(XID) );
+                    RETVAL = tpconvert( strrep_, binrep_, flags );
+                    sv_setref_pv( binrep, "XID_PTR", binrep_ );
+                }
+            }
+        }
+    OUTPUT:
+        RETVAL
+    
+int
+tpdequeue( qspace, qname, ctl, data, len, flags )
+    char * qspace
+    char * qname
+    TPQCTL_PTR ctl
+    SV * data
+    long len
+    long flags
+    PREINIT:
+    char *obuf;
+    CODE:
+	if (SvROK(data)) {
+	    IV tmp = SvIV((SV*)SvRV(data));
+	    obuf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("data is not a reference");
+
+        RETVAL = tpdequeue( qspace, qname, ctl, &obuf, &len, flags );
+	sv_setiv(SvRV(data), (IV)obuf);
+    OUTPUT:
+        RETVAL
+        len
+
+int
+tpdiscon( cd )
+    int cd
+
+int
+tpenqueue( qspace, qname, ctl, data, len, flags )
+    char * qspace
+    char * qname
+    TPQCTL_PTR ctl
+    CHAR_PTR data
+    long len
+    long flags
+    CODE:
+        RETVAL = tpenqueue( qspace, qname, ctl, data, len, flags );
+    OUTPUT:
+        RETVAL
+
+int
+tperrno()
+    CODE:
+        RETVAL = tperrno;
+    OUTPUT:
+        RETVAL
+
+int
+tperrordetail( flags )
+    long flags
+
+int
+tpexport( ibuf, ilen, ostr, olen, flags )
+    CHAR_PTR ibuf
+    long ilen
+    SV * ostr
+    long olen
+    long flags
+    PREINIT:
+    char * ostr_ = NULL;
+    CODE:
+        olen = 1024;
+        ostr_ = malloc( olen );
+        if ( ostr_ == NULL )
+            croak( "tpexort: malloc( %ld ) failed.\n", olen );
+
+        RETVAL = tpexport( ibuf, ilen, ostr_, &olen, flags );
+
+        if ( RETVAL == -1 && tperrno == TPELIMIT )
+        {
+            ostr_ = realloc( ostr_, olen );
+            if ( ostr_ == NULL )
+            {
+                croak( "tpexort: realloc( 0x%p, %ld ) failed.\n",
+                        ostr_, 
+                        olen
+                        );
+            }
+
+            RETVAL = tpexport( ibuf, ilen, ostr_, &olen, flags );
+        }
+
+        if ( RETVAL != -1 )
+            sv_setpvn( ostr, ostr_, olen );
+
+        free( ostr_ );
+    OUTPUT:
+        RETVAL
+        olen
+
+void
+tpfree( ptr )
+    SV * ptr
+    PREINIT:
+    char *buf;
+    CODE:
+	if (SvROK(ptr)) {
+	    IV tmp = SvIV((SV*)SvRV(ptr));
+	    buf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("idata is not a reference");
+
+        tpfree( buf );
+
+        /* set the reference to NULL so that we
+         *  know not to free the buffer again.
+         */
+	sv_setiv(SvRV(ptr), NULL);
+
+int
+tpgetctxt( context, flags )
+    long context
+    long flags
+    CODE:
+        RETVAL = tpgetctxt( &context, flags );
+    OUTPUT:
+        RETVAL
+        context
+
+int
+tpgetlev()
+
+int
+tpgetrply( cd, odata, olen, flags )
+    int cd
+    SV * odata
+    long olen
+    long flags
+    PREINIT:
+    char *obuf;
+    CODE:
+	if (SvROK(odata)) {
+	    IV tmp = SvIV((SV*)SvRV(odata));
+	    obuf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("odata is not a reference");
+
+        RETVAL = tpgetrply( &cd, &obuf, &olen, flags );
+	sv_setiv(SvRV(odata), (IV)obuf);
+    OUTPUT:
+        RETVAL
+        cd
+        olen
+
+int
+tpgprio()
+
+int
+tpimport( istr, ilen, odata, olen, flags )
+    char *      istr
+    long        ilen
+    SV *        odata
+    long        olen
+    long        flags
+    PREINIT:
+    char *obuf;
+    CODE:
+	if (SvROK(odata)) {
+	    IV tmp = SvIV((SV*)SvRV(odata));
+	    obuf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("odata is not a reference");
+
+        olen = 0;
+        RETVAL = tpimport( istr, ilen, &obuf, &olen, flags );
+        sv_setiv( SvRV(odata), (IV)obuf );
+    OUTPUT:
+        RETVAL
+        olen
+
+int
+tpinit( tpinitdata )
+    TPINIT_PTR tpinitdata
+
+int
+tpnotify( clientid, data, len, flags )
+    CLIENTID_PTR clientid
+    CHAR_PTR     data
+    long         len
+    long         flags
+
+int
+tpopen()
+
+int
+tppost( eventname, data, len, flags )
+    char * eventname
+    SV *   data
+    long   len
+    long   flags
+    PREINIT:
+    CHAR_PTR data_  = NULL;
+    CODE:
+        if ( data != &PL_sv_undef )
+        {
+            if (!SvROK(data)) 
+                croak("data is not a reference");
+            data_ = (CHAR_PTR)SvIV((SV*)SvRV(data));
+        }
+
+        RETVAL = tppost( eventname, data_, len, flags );
+    OUTPUT:
+        RETVAL
+
+void
+tprealloc( ptr, size )
+    SV * ptr
+    long     size
+    PREINIT:
+    CHAR_PTR ptr_;
+    CHAR_PTR rval;
+    CODE:
+        if (!SvROK(ptr)) 
+            croak("ptr is not a reference");
+        ptr_ = (CHAR_PTR)SvIV((SV*)SvRV(ptr));
+
+        rval = tprealloc( ptr_, size );
+        sv_setiv( SvRV(ptr), (IV)rval );
+
+        if ( rval )
+        {
+            ST(0) = newRV_inc( SvRV(ptr) );
+        }
+        else
+        {
+            ST(0) = &PL_sv_undef;
+        }
+
+int
+tprecv( cd, data, len, flags, revent )
+    int cd
+    SV * data
+    long len
+    long flags
+    long revent
+    PREINIT:
+    char * data_ = NULL;
+    CODE:
+	if (SvROK(data)) {
+	    IV tmp = SvIV((SV*)SvRV(data));
+	    data_ = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("data is not a reference");
+
+        RETVAL = tprecv( cd, &data_, &len, flags, &revent );
+        sv_setiv( SvRV(data), (IV)data_ );
+    OUTPUT: 
+        RETVAL
+        revent
+
+int
+tpresume( tranid, flags )
+    TPTRANID_PTR tranid
+    long flags
+
+int
+tpscmt( flags )
+    long flags
+
+int
+tpsend( cd, data, len, flags, revent )
+    int cd
+    SV * data
+    long len
+    long flags
+    long revent
+    PREINIT:
+    char * data_ = NULL;
+    CODE:
+        if ( data != &PL_sv_undef )
+        {
+            if (!SvROK(data)) 
+                croak("data is not a reference");
+            data_ = (CHAR_PTR)SvIV((SV*)SvRV(data));
+        }
+
+        RETVAL = tpsend( cd, data_, len, flags, &revent );
+    OUTPUT:
+        RETVAL
+        revent
+
+int
+tpsetctxt( context, flags )
+    long context
+    long flags
+
+void
+tpsetunsol( callback )
+    SV * callback
+    PREINIT:
+    long context = 0;
+    int rval = 0;
+    CODE:
+    if ( UnsolicitedHandlerMap == (HV*)NULL )
+        UnsolicitedHandlerMap = newHV();
+
+    rval = tpgetctxt( &context, 0 );
+    hv_store( UnsolicitedHandlerMap, 
+              (char*)&context, 
+              sizeof(context), 
+              newSVsv(callback),
+              0
+              );
+    tpsetunsol( unsolicited_message_handler );
+
+int
+tpsprio( prio, flags )
+    int prio
+    long flags
+
+char *
+tpstrerror( error )
+    int error
+
+char *
+tpstrerrordetail( err, flags )
+    int err
+    long flags
+
+long
+tpsubscribe( eventexpr, filter, ctl, flags )
+    char * eventexpr
+    char * filter
+    SV * ctl
+    long flags
+    PREINIT:
+    TPEVCTL_PTR ctl_ = NULL;
+    CODE:
+        if ( ctl != &PL_sv_undef )
+        {
+            if (!SvROK(ctl) || !sv_isa(ctl, "TPEVCTL_PTR") )
+                croak("ctl is not a TPEVCTL_PTR reference");
+            ctl_ = (TPEVCTL_PTR)SvIV((SV*)SvRV(ctl));
+        }
+        RETVAL = tpsubscribe( eventexpr, filter, ctl_, flags );
+    OUTPUT:
+        RETVAL
+
+int
+tpsuspend( tranid, flags )
+    TPTRANID_PTR tranid
+    long flags
+
+int
+tpterm()
+
+long
+tptypes( ptr, type, subtype )
+    CHAR_PTR ptr
+    SV * type
+    SV * subtype
+    PREINIT:
+        char type_[8];
+        char subtype_[16];
+    CODE:
+        RETVAL = tptypes( ptr, type_, subtype_ );
+        if ( type != &PL_sv_undef )
+            sv_setpv( type, type_ );
+        if ( subtype != &PL_sv_undef )
+            sv_setpv( subtype, subtype_ );
+    OUTPUT:
+        RETVAL
+        type
+        subtype
+
+int
+tpunsubscribe( subscription, flags )
+    long subscription
+    long flags
+
+int
+tpcall( svc, idata, ilen, odata, len, flags )
+    char * svc
+    SV * idata
+    long ilen
+    SV * odata
+    long len
+    long flags
+    PREINIT:
+    char *inbuf;
+    char *obuf;
+    CODE:
+
+	if (SvROK(idata)) {
+	    IV tmp = SvIV((SV*)SvRV(idata));
+	    inbuf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("idata is not a reference");
+
+	if (SvROK(odata)) {
+	    IV tmp = SvIV((SV*)SvRV(odata));
+	    obuf = (CHAR_PTR) tmp;
+	}
+	else
+	    croak("odata is not a reference");
+
+        RETVAL = tpcall( svc, inbuf, ilen, &obuf, &len, flags );
+
+        // we don't want the destructor called when
+        // we update the odata reference, so we can't call
+        // sv_setref_pv, because this will decrement the reference
+        // counter of the odata reference, and potentially call the
+        // destructor.  Instead I explicitely set the value of the
+        // pointer held by the odata reference.
+	sv_setiv(SvRV(odata), (IV)obuf);
+
+    OUTPUT:
+        RETVAL
+        len
+
+int
+tpacall( svc, idata, ilen, flags )
+    char * svc
+    CHAR_PTR idata
+    long ilen
+    long flags
+    PREINIT:
+    char *inbuf;
+    CODE:
+        RETVAL = tpacall( svc, idata, ilen, flags );
+    OUTPUT:
+        RETVAL
+
+char *
+tuxgetenv( name )
+    char * name
+    
+int
+tuxputenv( string )
+    char * string
+
+int
+tx_begin()
+
+int
+tx_close()
+
+int
+tx_commit()
+
+int
+tx_info( info )
+    TXINFO_PTR info
+
+int
+tx_open()
+
+int
+tx_rollback()
+
+int
+tx_set_commit_return( when_return )
+    long when_return
+
+int
+tx_set_transaction_control( control )
+    long control
+
+int
+tx_set_transaction_timeout( timeout )
+    long timeout
+
+void
+Usignal( signum, callback )
+    int signum
+    SV * callback
+    CODE:
+    if ( SignalHandlerMap == (HV*)NULL )
+        SignalHandlerMap = newHV();
+
+    hv_store( SignalHandlerMap, 
+              (char*)&signum, 
+              sizeof(signum), 
+              newSVsv(callback),
+              0
+              );
+    Usignal( signum, signal_handler );
+
+int
+userlog( message )
+    char * message
+
+int
+Ferror32()
+    CODE:
+        RETVAL = Ferror32;
+    OUTPUT:
+        RETVAL
+
+char *
+Fstrerror32( err )
+    int err
+    
+int
+Fappend32( fbfr, fieldid, value, len )
+    FBFR32_PTR  fbfr
+    FLDID32     fieldid
+    SV *        value
+    FLDLEN32    len
+    PREINIT:
+    IV          iv_val;
+    double      nv_val;
+    char *      pv_val;
+    STRLEN      pv_len;
+    char *      value_ptr;
+    CODE:
+        if ( SvROK( value ) )
+        {
+	    IV tmp = SvIV((SV*)SvRV(ST(0)));
+	    value_ptr = (char *) tmp;
+        }
+        else if ( SvIOK(value) )
+        {
+            iv_val = SvIV( value );
+            value_ptr = (char *)&iv_val;
+        }
+        else if ( SvNOK(value) )
+        {
+            nv_val = SvNV( value );
+            value_ptr = (char *)&nv_val;
+        }
+        else if ( SvPOK(value) )
+        {
+            pv_val = SvPV( value, pv_len );
+            value_ptr = pv_val;
+        }
+
+        RETVAL = Fappend32( fbfr, fieldid, value_ptr, len );
+    OUTPUT:
+        RETVAL
+
+int
+Fadd32( fbfr, fieldid, value, len )
+    FBFR32_PTR  fbfr
+    FLDID32     fieldid
+    SV *        value
+    FLDLEN32    len
+    PREINIT:
+    IV          iv_val;
+    double      nv_val;
+    char *      pv_val;
+    STRLEN      pv_len;
+    char *      value_ptr;
+    CODE:
+        if ( SvROK( value ) )
+        {
+	    IV tmp = SvIV((SV*)SvRV(value));
+	    value_ptr = (char *) tmp;
+        }
+        else if ( SvIOK(value) )
+        {
+            iv_val = SvIV( value );
+            value_ptr = (char *)&iv_val;
+        }
+        else if ( SvNOK(value) )
+        {
+            nv_val = SvNV( value );
+            value_ptr = (char *)&nv_val;
+        }
+        else if ( SvPOK(value) )
+        {
+            pv_val = SvPV( value, pv_len );
+            value_ptr = pv_val;
+        }
+
+        RETVAL = Fadd32( fbfr, fieldid, value_ptr, len );
+    OUTPUT:
+        RETVAL
+
+int
+Fget32( fbfr, fieldid, oc, loc, maxlen )
+    FBFR32_PTR  fbfr
+    FLDID32     fieldid
+    FLDOCC32    oc
+    SV *        loc
+    SV *    maxlen
+    PREINIT:
+    char *      val;
+    char        cval;
+    long        lval;
+    short       sval;
+    float       fval;
+    double      dval;
+    FLDLEN32    len = 0;
+    CODE:
+        /* get the length of the field */
+        val = Ffind32( fbfr, fieldid, oc, &len );
+        if ( val != NULL )
+        {
+            switch ( Fldtype32(fieldid) )
+            {
+                case FLD_SHORT:
+                    Fget32( fbfr, fieldid, oc, (char *)&sval, &len );
+                    sv_setiv( loc, sval );
+                    break;
+
+                case FLD_LONG:
+                    Fget32( fbfr, fieldid, oc, (char *)&lval, &len );
+                    sv_setiv( loc, lval );
+                    break;
+
+                case FLD_CHAR:
+                    Fget32( fbfr, fieldid, oc, (char *)&cval, &len );
+                    sv_setiv( loc, cval );
+                    break;
+
+                case FLD_FLOAT:
+                    Fget32( fbfr, fieldid, oc, (char *)&fval, &len );
+                    sv_setnv( loc, fval) ;
+                    break;
+
+                case FLD_DOUBLE:
+                    Fget32( fbfr, fieldid, oc, (char *)&dval, &len );
+                    sv_setnv( loc, dval );
+                    break;
+
+                case FLD_STRING:
+                case FLD_CARRAY:
+                    sv_setpvn( loc, val, len );
+                    break;
+
+                case FLD_PTR:
+                    sv_setref_pv( loc, Nullch, (void*)val );
+                    break;
+
+                case FLD_FML32:
+                    val = tpalloc( "FML32", 0, len );
+                    if ( val == NULL )
                     {
-                    char flags_str[16];
-                    sprintf( flags_str, "%d", tuxbfr->flags );
-					RETVAL = (char *)flags_str;
+                        RETVAL = -1;
+                        break;
                     }
-					break;
-		default:
-					break;
-	} /* end switch */
-	OUTPUT:
-	RETVAL
+                    sv_setref_pv(loc , "FBFR32_PTR", (void*)val );
+                    RETVAL = Fget32( fbfr, fieldid, oc, val, &len );
+                    break;
+
+                case FLD_VIEW32:
+                    break;
+            }
+
+            if ( maxlen != &PL_sv_undef )
+            {
+                sv_setuv(maxlen, (UV)len);
+                SvSETMAGIC(maxlen);
+            }
+        }
+        else
+        {
+            RETVAL = -1;
+        }
+    OUTPUT:
+        RETVAL
+        loc
+
+int
+Findex32( fbfr, intvl )
+    FBFR32_PTR fbfr
+    FLDOCC32   intvl
+
+int
+Fprint32( fbfr )
+    FBFR32_PTR fbfr
+
+FLDID32
+Fmkfldid32( type, num )
+    int type
+    FLDID32 num
+
+
+
+MODULE = TUXEDO        PACKAGE = CHAR_PTR        
+
+void
+DESTROY( char_ptr )
+    CHAR_PTR  char_ptr
+    CODE:
+        /*printf( "CHAR_PTR::DESTROY()\n" );*/
+        if ( char_ptr != NULL )
+        {
+            tpfree( char_ptr );
+        }
+
+
+MODULE = TUXEDO        PACKAGE = TPINIT_PTR        
 
 char *
-tuxerrormsg()
-	CODE:
-	RETVAL = tpstrerror(tperrno);
-	OUTPUT:
-	RETVAL
+usrname( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    char *usrname;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            usrname = (char *)SvPV( ST(1), n_a );
+            strcpy( obj->usrname, usrname );
+        }
+        RETVAL = obj->usrname;
+    OUTPUT:
+        RETVAL
 
 char *
-fml32errormsg()
-	CODE:
-	RETVAL = Fstrerror32(Ferror32);
-	OUTPUT:
-	RETVAL
+cltname( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    char *cltname;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            cltname = (char *)SvPV( ST(1), n_a );
+            strcpy( obj->cltname, cltname );
+        }
+        RETVAL = obj->cltname;
+    OUTPUT:
+        RETVAL
+
+char *
+passwd( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    char *passwd;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            passwd = (char *)SvPV( ST(1), n_a );
+            strcpy( obj->passwd, passwd );
+        }
+        RETVAL = obj->passwd;
+    OUTPUT:
+        RETVAL
+
+char *
+grpname( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    char *grpname;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            grpname = (char *)SvPV( ST(1), n_a );
+            strcpy( obj->grpname, grpname );
+        }
+        RETVAL = obj->grpname;
+    OUTPUT:
+        RETVAL
+
+long
+flags( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    long flags;
+    CODE:
+        if ( items > 1 )
+        {
+            flags = (long)SvIV( ST(1) );
+            obj->flags = flags;
+        }
+        RETVAL = obj->flags;
+    OUTPUT:
+        RETVAL
+
+long
+datalen( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    long datalen;
+    CODE:
+        if ( items > 1 )
+        {
+            datalen = (long)SvIV( ST(1) );
+            obj->datalen = datalen;
+        }
+        RETVAL = obj->datalen;
+    OUTPUT:
+        RETVAL
+
+char *
+data( obj, ... )
+    TPINIT_PTR obj
+    PREINIT:
+    char *data;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            data = (char *)SvPV( ST(1), n_a );
+            strcpy( (char *)&(obj->data), data );
+        }
+        RETVAL = (char *)&(obj->data);
+    OUTPUT:
+        RETVAL
+
+
+MODULE = TUXEDO        PACKAGE = FBFR32_PTR        
+
+
+MODULE = TUXEDO        PACKAGE = CLIENTID_PTR
+
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(CLIENTID) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "CLIENTID_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( clientid_ptr )
+    CLIENTID_PTR  clientid_ptr
+    CODE:
+        if ( clientid_ptr != NULL )
+        {
+            free( (char *)clientid_ptr );
+        }
+
+void
+clientdata( obj, ... )
+    CLIENTID_PTR obj
+    PREINIT:
+        long arraysize;
+        AV * clientdata;
+    PPCODE:
+        arraysize = sizeof(obj->clientdata)/sizeof(long);
+        if ( items > 1 )
+        {
+            if ( items > 5 )
+                croak( "More than 4 elements provided for clientdata.\n" );
+
+            for ( int i = 1; i < items; i++ )
+                obj->clientdata[i-1] = SvIV((SV*)ST(i));
+        }
+
+        EXTEND(SP, arraysize);
+        for ( int i = 0; i < arraysize; i++ )
+            PUSHs( sv_2mortal(newSViv( obj->clientdata[i])) );
+
+
+MODULE = TUXEDO        PACKAGE = TPTRANID_PTR
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(TPTRANID) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "TPTRANID_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( tptranid_ptr )
+    TPTRANID_PTR  tptranid_ptr
+    CODE:
+        if ( tptranid_ptr != NULL )
+            free( (char *)tptranid_ptr );
+
+void
+info( obj, ... )
+    TPTRANID_PTR obj
+    PREINIT:
+        long arraysize;
+    PPCODE:
+        arraysize = sizeof(obj->info)/sizeof(long);
+        if ( items > 1 )
+        {
+            if ( items > (arraysize + 1) )
+                croak( "More than %d elements provided for clientdata.\n",
+                        arraysize
+                        );
+
+            for ( int i = 1; i < items; i++ )
+                obj->info[i-1] = SvIV((SV*)ST(i));
+        }
+
+        EXTEND(SP, arraysize);
+        for ( int i = 0; i < arraysize; i++ )
+            PUSHs( sv_2mortal(newSViv( obj->info[i])) );
+
+
+MODULE = TUXEDO        PACKAGE = XID_PTR
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(XID) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "XID_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( obj )
+    XID_PTR  obj
+    CODE:
+        if ( obj != NULL )
+        {
+            free( (char *)obj );
+        }
+
+long 
+formatID( obj, ... )
+    XID_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->formatID = (long)SvIV((SV*)ST(1));
+
+        RETVAL = obj->formatID;
+    OUTPUT:
+        RETVAL
+
+long 
+gtrid_length( obj, ... )
+    XID_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->gtrid_length = (long)SvIV((SV*)ST(1));
+
+        RETVAL = obj->gtrid_length;
+    OUTPUT:
+        RETVAL
+
+long 
+bqual_length( obj, ... )
+    XID_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->bqual_length = (long)SvIV((SV*)ST(1));
+
+        RETVAL = obj->bqual_length;
+    OUTPUT:
+        RETVAL
+
+char *
+data( obj, ... )
+    XID_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->data, SvPV((SV*)ST(1), n_a) );
+
+        RETVAL = obj->data;
+    OUTPUT:
+        RETVAL
+
+MODULE = TUXEDO        PACKAGE = TPQCTL_PTR
+
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(TPQCTL) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "TPQCTL_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( obj )
+    TPQCTL_PTR  obj
+    CODE:
+        if ( obj != NULL )
+        {
+            free( (char *)obj );
+        }
+
+long 
+flags( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->flags = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->flags;
+    OUTPUT:
+        RETVAL
+
+long 
+deq_time( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->deq_time = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->deq_time;
+    OUTPUT:
+        RETVAL
+
+
+long 
+priority( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->priority = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->priority;
+    OUTPUT:
+        RETVAL
+
+
+long 
+diagnostic( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->diagnostic = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->diagnostic;
+    OUTPUT:
+        RETVAL
+
+
+char *
+msgid( obj, ... )
+    TPQCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->msgid, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->msgid;
+    OUTPUT:
+        RETVAL
+
+
+char *
+corrid( obj, ... )
+    TPQCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->corrid, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->corrid;
+    OUTPUT:
+        RETVAL
+
+
+char *
+replyqueue( obj, ... )
+    TPQCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->replyqueue, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->replyqueue;
+    OUTPUT:
+        RETVAL
+
+
+char *
+failurequeue( obj, ... )
+    TPQCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->failurequeue, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->failurequeue;
+    OUTPUT:
+        RETVAL
+
+
+void 
+cltid( obj, ... )
+    TPQCTL_PTR obj
+    PREINIT:
+    SV * sv;
+    CODE:
+        ST(0) = sv_newmortal();
+	sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
+        SvREFCNT_inc( SvRV(ST(0)) );
+
+
+long 
+urcode( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->urcode = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->urcode;
+    OUTPUT:
+        RETVAL
+
+
+long 
+appkey( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->appkey = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->appkey;
+    OUTPUT:
+        RETVAL
+
+
+long 
+delivery_qos( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->delivery_qos = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->delivery_qos;
+    OUTPUT:
+        RETVAL
+
+
+long 
+reply_qos( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->reply_qos = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->reply_qos;
+    OUTPUT:
+        RETVAL
+
+
+long 
+exp_time( obj, ... )
+    TPQCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->exp_time = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->exp_time;
+    OUTPUT:
+        RETVAL
+
+MODULE = TUXEDO        PACKAGE = TPEVCTL_PTR
+
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(TPEVCTL) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "TPEVCTL_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( obj )
+    TPEVCTL_PTR  obj
+    CODE:
+        if ( obj != NULL )
+        {
+            free( (char *)obj );
+        }
+
+long 
+flags( obj, ... )
+    TPEVCTL_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->flags = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->flags;
+    OUTPUT:
+        RETVAL
+
+char *
+name1( obj, ... )
+    TPEVCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->name1, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->name1;
+    OUTPUT:
+        RETVAL
+
+char *
+name2( obj, ... )
+    TPEVCTL_PTR obj
+    PREINIT:
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+            strcpy( obj->name2, (char *)SvPV((SV*)ST(1), n_a) );
+        RETVAL = obj->name2;
+    OUTPUT:
+        RETVAL
+
+void 
+qctl( obj, ... )
+    TPEVCTL_PTR obj
+    PREINIT:
+    SV * sv;
+    CODE:
+        ST(0) = sv_newmortal();
+	sv_setref_pv(ST(0), "TPQCTL_PTR", (void*)&obj->qctl);
+        SvREFCNT_inc( SvRV(ST(0)) );
+
+MODULE = TUXEDO        PACKAGE = TXINFO_PTR
+
+void
+new()
+    PREINIT:
+        char *ptr;
+    CODE:
+        ptr = calloc( 1, sizeof(TXINFO) );
+        ST(0) = sv_newmortal();
+        if ( ptr != NULL )
+            sv_setref_pv(ST(0), "TXINFO_PTR", ptr);
+        else
+            ST(0) = &PL_sv_undef;
+
+void
+DESTROY( obj )
+    TXINFO_PTR  obj
+    CODE:
+        if ( obj != NULL )
+        {
+            free( (char *)obj );
+        }
+
+void 
+xid( obj, ... )
+    TXINFO_PTR obj
+    PREINIT:
+    SV * sv;
+    CODE:
+        ST(0) = sv_newmortal();
+	sv_setref_pv(ST(0), "XID_PTR", (void*)&obj->xid);
+        SvREFCNT_inc( SvRV(ST(0)) );
+
+long 
+when_return( obj, ... )
+    TXINFO_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->when_return = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->when_return;
+    OUTPUT:
+        RETVAL
+
+long 
+transaction_control( obj, ... )
+    TXINFO_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->transaction_control = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->transaction_control;
+    OUTPUT:
+        RETVAL
+
+long 
+transaction_timeout( obj, ... )
+    TXINFO_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->transaction_timeout = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->transaction_timeout;
+    OUTPUT:
+        RETVAL
+
+long 
+transaction_state( obj, ... )
+    TXINFO_PTR obj
+    CODE:
+        if ( items > 1 )
+            obj->transaction_state = (long)SvIV((SV*)ST(1));
+        RETVAL = obj->transaction_state;
+    OUTPUT:
+        RETVAL
 
