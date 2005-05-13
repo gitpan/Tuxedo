@@ -267,7 +267,7 @@ require AutoLoader;
     SIGUSR2
     SIGWINCH
 );
-$VERSION = '2.00';
+$VERSION = '2.01';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
