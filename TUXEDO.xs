@@ -74,6 +74,72 @@ unsolicited_message_handler( data, len, flags )
 }
 
 
+static HV * signum        = (HV *)NULL;
+
+static void
+signum_init()
+{
+    int signumIV;
+    char *sig_num;
+    char *sig_name;
+    char *numDelim;
+    char *nameDelim;
+    STRLEN n_a;
+    SV **svPtr;
+    SV * value;
+    I32 len;
+
+    HV * Config = get_hv( "Config", FALSE );
+
+    if ( Config == NULL )
+        croak( "Could not access the %%Config variable to get signal names and numbers.\n" );
+
+    svPtr = hv_fetch( Config, (char *)"sig_num", strlen("sig_num"), FALSE );
+    if ( svPtr == (SV**)NULL )
+        croak( "Could not get the value of $Config{sig_num}.\n" );
+    sig_num = SvPV( *svPtr, n_a );
+
+    svPtr = hv_fetch( Config, (char *)"sig_name", strlen("sig_name"), FALSE );
+    if ( svPtr == (SV**)NULL )
+        croak( "Could not get the value of $Config{sig_name}.\n" );
+    sig_name = SvPV( *svPtr, n_a );
+
+    signum = newHV();
+    for ( ; ; )
+    {
+        numDelim  = strchr( sig_num + 1, ' ' );
+        nameDelim = strchr( sig_name + 1, ' ' );
+
+        if ( numDelim != NULL ) *numDelim = '\0';
+        if ( nameDelim != NULL ) *nameDelim = '\0';
+
+        sscanf( sig_num, "%d", &signumIV );
+
+        hv_store( signum, 
+                  (char*)sig_name, 
+                  strlen(sig_name), 
+                  newSViv(signumIV),
+                  0
+                  );
+
+        if ( numDelim == NULL || nameDelim == NULL ) break;
+
+        sig_num  = numDelim + 1;
+        sig_name = nameDelim + 1;
+    }
+
+/*
+    hv_iterinit( signum );
+    value =  hv_iternextsv( signum, &sig_name, &len );
+    while ( value != NULL )
+    {
+        signumIV = SvIV( value );
+        printf( "signum{%s} = %d\n", sig_name, signumIV );
+        value =  hv_iternextsv( signum, &sig_name, &len );
+    }
+*/
+}
+
 static HV * SignalHandlerMap = (HV *)NULL;
 
 static void
@@ -108,6 +174,47 @@ MODULE = TUXEDO    PACKAGE = TUXEDO
 
 BOOT:
     InitTuxedoConstants();
+    signum_init();
+
+void
+handlePerlSignals()
+    PREINIT:
+    char * key;
+    IV signumIV;
+    I32 len;
+    SV * value;
+    HV * SIG;
+    STRLEN n_a;
+    SV ** sv;
+    CODE:
+    SIG = get_hv( "SIG", FALSE );
+    if ( SIG != NULL )
+    {
+        hv_iterinit( SIG );
+        value = hv_iternextsv( SIG, &key, &len );
+        while ( value != NULL )
+        {
+            if ( SvOK(value) )
+            {
+                /* get the signal number */
+                sv = hv_fetch( signum, 
+                               (char *)key,
+                               strlen(key),
+                               FALSE
+                               );
+
+                if ( sv != NULL )
+                {
+                    signumIV = SvIV( *sv );
+                    printf( "Setting Perl signal handler for SIG%s [%d]\n", key, signumIV );
+                    Usignal( signumIV, Perl_sighandler );
+                }
+            }
+
+            value = hv_iternextsv( SIG, &key, &len );
+        }
+    }
+
 
 long
 constant( name, arg )

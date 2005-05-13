@@ -1,7 +1,15 @@
 Changes
 MANIFEST
 Makefile.PL
+TPINIT_PTR.pm
+FBFR32_PTR.pm
 TUXEDO.pm
 TUXEDO.xs
-test.pl
 README
+tpadm.pm
+testflds.pm
+testflds
+test.pl
+mkfldpm32.pl
+genubbconfig.pl
+META.yml                                 Module meta-data (added by MakeMaker)

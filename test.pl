@@ -11,15 +11,39 @@ END {print "not ok 1\n" unless $loaded;}
 use TUXEDO;
 use tpadm;
 use testflds;
-$loaded = 1;
-print "ok 1\n";
+require "genubbconfig.pl";
 
-######################### End of black magic.
 
 # Insert your test code below (better if it prints "ok 13"
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+###################################################################
+# Create a ubbconfig and boot the tuxedo system that this test
+# script will connect to as a workstation tuxedo client.
+###################################################################
+$ENV{TUXCONFIG} = get_tuxconfig();
+system( "tmshutdown -y" );
+
+gen_ubbconfig();
+if ( system( "tmloadcf -y ubbconfig" ) ) { die "tmloadcf failed\n"; }
+system( "tmboot -y" );
+
+$loaded = 1;
+print "ok 1\n";
+
+######################### End of black magic.
+
+###################################################################
+# Set up signal handlers
+###################################################################
+$SIG{'INT'} = sub { print "caught sigint\n"; };
+$SIG{'TERM'} = sub { print "caught sigterm\n"; };
+handlePerlSignals();
+
+###################################################################
+# Connect to the tuxedo system
+###################################################################
 # TEST 1: tpalloc
 my $password = "00000031". "\377" . "0" . "\377" . "utp_tester1" . "\377"  . "utputp1" . "\377";
 my $buffer = tpalloc( "TPINIT", "", TPINITNEED( length($password) ) );
@@ -51,7 +75,7 @@ print "SUBTYPE: " . $subtype . "\n";
 print "ok 3\n";
 
 # TEST 3: tuxputenv and tuxgetenv
-tuxputenv( "WSNADDR=//kultarr:9210" );
+tuxputenv( "WSNADDR=" . get_wsnaddr() );
 print "WSNADDR = " . tuxgetenv( "WSNADDR" ) . "\n";
 
 # TEST 4: tpinit, tperrno and tpstrerror
@@ -60,6 +84,9 @@ if ( $rval == -1 ) {
     print "tpinit failed: " . tpstrerror(tperrno) . "\n";
 }
 
+###################################################################
+# Make some MIB service calls
+###################################################################
 # TEST: Fappend32
 my $infml32 = tpalloc( "FML32", 0, 1024 );
 my $outfml32 = tpalloc( "FML32", 0, 1024 );
@@ -89,7 +116,7 @@ if ( $rval == -1 ) {
 $rval = Fprint32( $outfml32 );
 print "finished tpcall\n";
 print "Press <enter> to continue...";
-$line = <STDIN>;
+#$line = <STDIN>;
 
 print "calling tpacall...\n";
 $cd = tpacall( ".TMIB", $infml32, 0, 0 );
@@ -104,7 +131,7 @@ if ( $rval == -1 ) {
 $rval = Fprint32( $outfml32 );
 print "finished tpacall\n";
 print "Press <enter> to continue...";
-$line = <STDIN>;
+#$line = <STDIN>;
 
 
 $rval = Fget32( $outfml32, TA_OCCURS, 0, $val, $len );
@@ -244,7 +271,7 @@ if ( $rval == -1 ) {
 # TEST Usignal
 Usignal( 17, \&sigusr2 );
 printf( "My process id is $$\n" );
-sleep 20;
+
 
 # TEST 5: tpterm
 $rval = tpterm();
@@ -253,6 +280,8 @@ if ( $rval == -1 ) {
 }
 
 userlog( "Finished test of activetux for perl." . "  You are FAT!" );
+
+system( "tmshutdown -y" );
 
 exit(0);
 

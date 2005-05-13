@@ -4,6 +4,7 @@ use TPINIT_PTR;
 use FBFR32_PTR;
 use strict;
 use Carp;
+use Config;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
 
 require Exporter;
@@ -195,6 +196,7 @@ require AutoLoader;
     tx_set_transaction_timeout
     Usignal
     userlog
+    handlePerlSignals
 
     Fadd32
     Fappend32
@@ -238,6 +240,32 @@ require AutoLoader;
     TMIB_CONFIG
     TMIB_GLOBAL
     TMIB_NOTIFY
+
+    SIGABRT
+    SIGALRM
+    SIGBUS
+    SIGCHLD
+    SIGCLD
+    SIGEMT
+    SIGFPE
+    SIGHUP
+    SIGILL
+    SIGINT
+    SIGIO
+    SIGIOT
+    SIGKILL
+    SIGPIPE
+    SIGPOLL
+    SIGPWR
+    SIGQUIT
+    SIGSEGV
+    SIGSYS
+    SIGTERM
+    SIGTRAP
+    SIGURG
+    SIGUSR1
+    SIGUSR2
+    SIGWINCH
 );
 $VERSION = '2.00';
 

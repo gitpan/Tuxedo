@@ -1,4 +1,4 @@
-#!/usr/bin/perl -Iblib/arch -Iblib/lib
+#! perl -Iblib/arch -Iblib/lib
 use TUXEDO;
 
 $numargs = @ARGV;
