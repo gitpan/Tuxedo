@@ -22,6 +22,7 @@ typedef XID *           XID_PTR;
 typedef TPQCTL *        TPQCTL_PTR;
 typedef TPEVCTL *       TPEVCTL_PTR;
 typedef TXINFO *        TXINFO_PTR;
+typedef TPSVCINFO *     TPSVCINFO_PTR;
 
 static HV * UnsolicitedHandlerMap = (HV *)NULL;
 
@@ -168,14 +169,27 @@ signal_handler( sig_num )
     /* call the Perl sub */
     perl_call_sv( *sv, G_DISCARD );
 }
-    
 
-MODULE = TUXEDO    PACKAGE = TUXEDO        
+int buffer_setref( SV * sv, char *buffer )
+{
+    char type[16];
 
-BOOT:
-    InitTuxedoConstants();
-    signum_init();
+    int rc = tptypes( buffer, type, NULL );
+    if ( rc != -1 )
+    {
+        if ( !strcmp(type, "TPINIT") )
+            sv_setref_pv(sv, "TPINIT_PTR", (void*)buffer);
+        else if ( !strcmp(type, "FML32") )
+            sv_setref_pv(sv, "FBFR32_PTR", (void*)buffer);
+        else
+            sv_setref_pv(sv, Nullch, (void*)buffer);
+    }
+    return rc;
+}
 
+/*
+ * Should eventually remove this completely from this module
+ *
 void
 handlePerlSignals()
     PREINIT:
@@ -196,7 +210,6 @@ handlePerlSignals()
         {
             if ( SvOK(value) )
             {
-                /* get the signal number */
                 sv = hv_fetch( signum, 
                                (char *)key,
                                strlen(key),
@@ -214,6 +227,15 @@ handlePerlSignals()
             value = hv_iternextsv( SIG, &key, &len );
         }
     }
+*/
+
+
+MODULE = TUXEDO    PACKAGE = TUXEDO        
+
+BOOT:
+    InitTuxedoConstants();
+    signum_init();
+
 
 
 long
@@ -364,7 +386,7 @@ tpconvert( strrep, binrep, flags )
     CODE:
         if ( flags & TPTOSTRING )
         {
-            // binrep is the source, strrep is the dest
+            /* binrep is the source, strrep is the dest */
             if (!SvROK(binrep)) 
                 croak("binrep is not a reference");
             binrep_ = (CHAR_PTR)SvIV((SV*)SvRV(binrep));
@@ -373,7 +395,7 @@ tpconvert( strrep, binrep, flags )
         }
         else
         {
-            // strrep is the source, binrep is the dest
+            /* strrep is the source, binrep is the dest */
             if ( !SvPOK(strrep) )
 	        croak("strrep is not a string");
             strrep_ = SvPV( strrep, n_a );
@@ -830,12 +852,13 @@ tpcall( svc, idata, ilen, odata, len, flags )
 
         RETVAL = tpcall( svc, inbuf, ilen, &obuf, &len, flags );
 
-        // we don't want the destructor called when
-        // we update the odata reference, so we can't call
-        // sv_setref_pv, because this will decrement the reference
-        // counter of the odata reference, and potentially call the
-        // destructor.  Instead I explicitely set the value of the
-        // pointer held by the odata reference.
+        /* we don't want the destructor called when
+         * we update the odata reference, so we can't call
+         * sv_setref_pv, because this will decrement the reference
+         * counter of the odata reference, and potentially call the
+         * destructor.  Instead I explicitely set the value of the
+         * pointer held by the odata reference.
+         */
 	sv_setiv(SvRV(odata), (IV)obuf);
 
     OUTPUT:
@@ -1260,6 +1283,7 @@ clientdata( obj, ... )
     PREINIT:
         long arraysize;
         AV * clientdata;
+        int i;
     PPCODE:
         arraysize = sizeof(obj->clientdata)/sizeof(long);
         if ( items > 1 )
@@ -1267,12 +1291,12 @@ clientdata( obj, ... )
             if ( items > 5 )
                 croak( "More than 4 elements provided for clientdata.\n" );
 
-            for ( int i = 1; i < items; i++ )
+            for ( i = 1; i < items; i++ )
                 obj->clientdata[i-1] = SvIV((SV*)ST(i));
         }
 
         EXTEND(SP, arraysize);
-        for ( int i = 0; i < arraysize; i++ )
+        for ( i = 0; i < arraysize; i++ )
             PUSHs( sv_2mortal(newSViv( obj->clientdata[i])) );
 
 
@@ -1301,6 +1325,7 @@ info( obj, ... )
     TPTRANID_PTR obj
     PREINIT:
         long arraysize;
+        int i;
     PPCODE:
         arraysize = sizeof(obj->info)/sizeof(long);
         if ( items > 1 )
@@ -1310,12 +1335,12 @@ info( obj, ... )
                         arraysize
                         );
 
-            for ( int i = 1; i < items; i++ )
+            for ( i = 1; i < items; i++ )
                 obj->info[i-1] = SvIV((SV*)ST(i));
         }
 
         EXTEND(SP, arraysize);
-        for ( int i = 0; i < arraysize; i++ )
+        for ( i = 0; i < arraysize; i++ )
             PUSHs( sv_2mortal(newSViv( obj->info[i])) );
 
 
@@ -1709,4 +1734,65 @@ transaction_state( obj, ... )
         RETVAL = obj->transaction_state;
     OUTPUT:
         RETVAL
+
+MODULE = TUXEDO        PACKAGE = TPSVCINFO_PTR
+
+void 
+data( obj )
+    TPSVCINFO_PTR obj
+    PREINIT:
+    SV * sv;
+    CODE:
+        ST(0) = sv_newmortal();
+        buffer_setref( ST(0), obj->data );
+
+char *
+name( obj )
+    TPSVCINFO_PTR obj
+    CODE:
+        RETVAL = obj->name;
+    OUTPUT:
+        RETVAL
+
+long
+flags( obj )
+    TPSVCINFO_PTR obj
+    CODE:
+        RETVAL = obj->flags;
+    OUTPUT:
+        RETVAL
+
+long
+len( obj )
+    TPSVCINFO_PTR obj
+    CODE:
+        RETVAL = obj->len;
+    OUTPUT:
+        RETVAL
+
+int
+cd( obj )
+    TPSVCINFO_PTR obj
+    CODE:
+        RETVAL = obj->cd;
+    OUTPUT:
+        RETVAL
+
+long
+appkey( obj )
+    TPSVCINFO_PTR obj
+    CODE:
+        RETVAL = obj->appkey;
+    OUTPUT:
+        RETVAL
+
+void 
+cltid( obj )
+    TPSVCINFO_PTR obj
+    PREINIT:
+    SV * sv;
+    CODE:
+        ST(0) = sv_newmortal();
+	sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
+        SvREFCNT_inc( SvRV(ST(0)) );
 

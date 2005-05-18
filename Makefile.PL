@@ -1,13 +1,36 @@
 use ExtUtils::MakeMaker;
-# See lib/ExtUtils/MakeMaker.pm for details of how to influence
-# the contents of the Makefile that is written.
-WriteMakefile(
-    'NAME'	=> 'TUXEDO',
-    'VERSION_FROM' => 'TUXEDO.pm',
-    'C' => ['TuxedoConstants.c'],
-    'OBJECT' => 'TuxedoConstants.o TUXEDO.o'
+
+my $os = $^O;
+
+my %opts = (
+    NAME         => 'TUXEDO',
+    VERSION_FROM => 'TUXEDO.pm',
+    'C'          => [ 'TuxedoConstants.c' ],
+    'OBJECT'     => 'TuxedoConstants.o TUXEDO.o',
+    'INC'        => "-I $ENV{TUXDIR}/include"
 );
 
+# --- How shall we link with Tuxedo?
+if ( $os eq 'MSWin32' )
+{
+    $opts{LIBS} = [ "-L$ENV{TUXDIR}/lib -llibtux -llibbuft -llibfml -llibfml32 -llibengine -lwsock32 -lkernel32 -ladvapi32 -luser32 -lgdi32 -lcomdlg32 -lwinspool" ];
+}
+
+# -- unix variants..tested on solaris
+else
+{
+    $buildclient_cmd = `buildclient -v 2>/dev/null`;
+    @buildclient_options = split( / /, $buildclient_cmd ); 
+    @lib_options = grep /-[LlR]/, @buildclient_options;
+    $libs = join " ", @lib_options;
+    $libs =~ s/\${TUXDIR}/$ENV{TUXDIR}/;
+    #print "libs = $libs\n";
+    $opts{LIBS} = [ "$libs" ];
+}
+
+WriteMakefile( %opts );
+
+=comment
 package MY;
 
 sub c_o
@@ -27,3 +50,5 @@ sub dynamic_lib
 	$text .= "\t\$(CHMOD) \$(PERM_RWX) \$@\n";
 	$text;
 }
+=cut
+

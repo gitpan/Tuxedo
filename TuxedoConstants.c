@@ -19,8 +19,10 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <sched.h>
+
+#ifndef WIN32
 #include <signal.h>
+#endif
 
 typedef  unsigned long int  u4;   /* unsigned 4-byte type */
 typedef  unsigned     char  u1;   /* unsigned 1-byte type */
@@ -206,9 +208,10 @@ NamedConstant namedConstants[] =
 
     { 0, "TPNULLCONTEXT", TPNULLCONTEXT	 },
     { 0, "TPINVALIDCONTEXT", TPINVALIDCONTEXT	 },
-    { 0, "TPSINGLECONTEXT", TPSINGLECONTEXT		 },
+    { 0, "TPSINGLECONTEXT", TPSINGLECONTEXT		 }
 
-    { 0, "SIGHUP", SIGHUP },
+#ifndef WIN32
+    ,{ 0, "SIGHUP", SIGHUP },
     { 0, "SIGINT", SIGINT },
     { 0, "SIGQUIT", SIGQUIT },
     { 0, "SIGILL", SIGILL },
@@ -233,7 +236,7 @@ NamedConstant namedConstants[] =
     { 0, "SIGURG", SIGURG },
     { 0, "SIGPOLL", SIGPOLL },
     { 0, "SIGIO", SIGIO }
-
+#endif
 };
 
 /* The mixing step */
@@ -310,12 +313,14 @@ static int tableInitialized = 0;
 
 void InitTuxedoConstants()
 {
+    u4 hashVal = 0;
+    long tableSize = sizeof(namedConstants)/sizeof(NamedConstant);
+    long i = 0;
+
     if ( tableInitialized )
         return;
 
-    long tableSize = sizeof(namedConstants)/sizeof(NamedConstant);
-    u4 hashVal = 0;
-    for ( long i = 0; i < tableSize; i++ )
+    for ( i = 0; i < tableSize; i++ )
     {
         hashVal = hash( namedConstants[i].name, 0 );
         namedConstants[i].hash = hashVal;
@@ -327,36 +332,26 @@ void InitTuxedoConstants()
            compare
            );
 
-/*
-    for ( long i = 0; i < tableSize; i++ )
-    {
-        printf( "%u, %s, 0x%08x\n", 
-                namedConstants[i].hash,
-                namedConstants[i].name,
-                namedConstants[i].value
-                );
-    }
-*/
-
     tableInitialized = 1;
 }
 
 long 
 getTuxedoConstant( char *name )
 {
-    errno = 0;
-    NamedConstant key;
+    NamedConstant key, * nc;
     key.name = name;
     key.hash = hash( name, 0 );
-    NamedConstant * nc = 
-        (NamedConstant *)bsearch( &key, 
-                                  namedConstants,
-                                  sizeof(namedConstants)/sizeof(NamedConstant),
-                                  sizeof(NamedConstant),
-                                  compare
-                                  );
+    nc = (NamedConstant *)bsearch( &key, 
+                                   namedConstants,
+                                   sizeof(namedConstants)/sizeof(NamedConstant),
+                                   sizeof(NamedConstant),
+                                   compare
+                                   );
     if ( nc != NULL )
+    {
+        errno = 0;
         return nc->value;
+    }
 
    errno = EINVAL;
    return 0;

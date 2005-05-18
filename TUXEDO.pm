@@ -196,7 +196,6 @@ require AutoLoader;
     tx_set_transaction_timeout
     Usignal
     userlog
-    handlePerlSignals
 
     Fadd32
     Fappend32
@@ -267,7 +266,7 @@ require AutoLoader;
     SIGUSR2
     SIGWINCH
 );
-$VERSION = '2.03';
+$VERSION = '2.04';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -351,7 +350,7 @@ B<Future versions of this module will include>
 
 =item * B<workstation and native modules>
 
-Different modules will exist for native and workstation tuxedo development.  Currently workstation development is the default.
+Different modules will exist for native and workstation tuxedo development.  Currently native is the default.
 
 =item * B<perl tuxedo services>
 

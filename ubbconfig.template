@@ -16,8 +16,8 @@ TUXGRP          LMID=<HOSTNAME> GRPNO=1
 APPGRP          LMID=<HOSTNAME> GRPNO=2
 
 *SERVERS
-WSL             SRVID=1 SRVGRP=TUXGRP
-                CLOPT="-A -- -n <WSNADDR>"
+#WSL             SRVID=1 SRVGRP=TUXGRP
+#                CLOPT="-A -- -n <WSNADDR>"
 
 *SERVICES
 
