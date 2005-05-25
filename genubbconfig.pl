@@ -1,4 +1,25 @@
 
+my $os = $^O;
+
+############# Global Variables ##############
+my $cwd;
+chomp( my $hostname = `hostname`);
+
+if ( $os eq 'MSWin32' ) {
+	eval "use Win32";
+	$cwd = Win32::GetCwd();
+	$cwd = Win32::GetShortPathName( $cwd );
+	$hostname = uc($hostname);
+}
+else
+{
+	chomp ( $cwd = `pwd` );
+}
+
+my $tuxconfig = $cwd . "\/TUXCONFIG";
+
+################################################
+
 # search array of integers a for given integer x
 # return index where found or -1 if not found
 sub bsearch {
@@ -24,6 +45,10 @@ sub bsearch {
 
 sub get_ipckey()
 {
+	if ( $os eq 'MSWin32' ) {
+		return 0xbea0;
+	}
+	
     ##############################################################
     # create an array of all the currently used ipckeys
     ##############################################################
@@ -62,14 +87,11 @@ sub get_ipckey()
 
 sub get_tuxconfig()
 {
-    chomp( my $pwd = `pwd` );
-    my $tuxconfig = $pwd . "\/TUXCONFIG";
     return $tuxconfig;
 }
 
 sub get_wsnaddr()
 {
-    chomp( my $hostname = `hostname`);
     my $wsnaddr = "//" . $hostname . ":10000";
     return $wsnaddr;
 }
@@ -88,7 +110,7 @@ sub gen_ubbconfig()
     open( UBBCONFIG, ">$ubbconfig" ) ||
         die ( "Can't open $ubbconfig: $!\n" );
 
-    chomp( my $pwd = `pwd` );
+    chomp( my $pwd = $cwd );
 
     while ( <TEMPLATE> )
     {
@@ -97,7 +119,6 @@ sub gen_ubbconfig()
         /eg;
 
         s/<HOSTNAME>/
-            chomp( $hostname = `hostname`);
             $hostname;
         /eg;
 
@@ -110,7 +131,7 @@ sub gen_ubbconfig()
         /eg;
 
         s/<TUXCONFIG>/
-            get_tuxconfig() . "";
+            get_tuxconfig();
         /eg;
 
         s/<WSNADDR>/
@@ -128,7 +149,13 @@ sub gen_ubbconfig()
 # MAIN CODE
 ####################################################################
 #gen_ubbconfig();
-#print `cat ubbconfig`;
+
+#if ( $os eq 'MSWin32' ) {
+#		print `type ubbconfig`;
+#}
+#else {
+#	print `cat ubbconfig`;
+#}
 
 #$ENV{TUXCONFIG} = get_tuxconfig();
 #system( "tmshutdown -y" );

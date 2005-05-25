@@ -12,7 +12,12 @@
  * because it will be overwritten when the actual hash value is calculated
  * doing the initialization.
  */
-#include <strings.h>
+
+#ifdef WIN32
+#include "perl.h"
+#endif
+
+#include <string.h>
 #include <atmi.h>
 #include <fml32.h>
 #include <tpadm.h>

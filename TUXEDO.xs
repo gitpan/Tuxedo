@@ -26,7 +26,7 @@ typedef TPSVCINFO *     TPSVCINFO_PTR;
 
 static HV * UnsolicitedHandlerMap = (HV *)NULL;
 
-static void
+void _TMDLLENTRY
 unsolicited_message_handler( data, len, flags )
     char * data;
     long len;
@@ -409,7 +409,9 @@ tpconvert( strrep, binrep, flags )
                 }
                 else
                 {
-                    binrep_ = calloc( 1, sizeof(CLIENTID) );
+                    /* binrep_ = calloc( 1, sizeof(CLIENTID) ); */
+                    binrep_ = malloc( sizeof(CLIENTID) );
+                    memset( binrep_, 0, sizeof(CLIENTID) );
                     RETVAL = tpconvert( strrep_, binrep_, flags );
                     sv_setref_pv( binrep, "CLIENTID_PTR", binrep_ );
                 }
@@ -424,7 +426,9 @@ tpconvert( strrep, binrep, flags )
                 }
                 else
                 {
-                    binrep_ = calloc( 1, sizeof(TPTRANID) );
+                    /* binrep_ = calloc( 1, sizeof(TPTRANID) ); */
+                    binrep_ = malloc( sizeof(CLIENTID) );
+                    memset( binrep_, 0, sizeof(CLIENTID) );
                     RETVAL = tpconvert( strrep_, binrep_, flags );
                     sv_setref_pv( binrep, "TPTRANID_PTR", binrep_ );
                 }
@@ -439,7 +443,9 @@ tpconvert( strrep, binrep, flags )
                 }
                 else
                 {
-                    binrep_ = calloc( 1, sizeof(XID) );
+                    /* binrep_ = calloc( 1, sizeof(XID) ); */
+                    binrep_ = malloc( sizeof(CLIENTID) );
+                    memset( binrep_, 0, sizeof(CLIENTID) );
                     RETVAL = tpconvert( strrep_, binrep_, flags );
                     sv_setref_pv( binrep, "XID_PTR", binrep_ );
                 }
@@ -1131,10 +1137,12 @@ void
 DESTROY( char_ptr )
     CHAR_PTR  char_ptr
     CODE:
-        /*printf( "CHAR_PTR::DESTROY()\n" );*/
+        /* printf( "CHAR_PTR::DESTROY()\n" ); */
         if ( char_ptr != NULL )
         {
+	    /* printf( "calling tpfree( 0x%p )\n", char_ptr ); */
             tpfree( char_ptr );
+            /* printf( "finished calling tpfree\n" ); */
         }
 
 
@@ -1261,7 +1269,10 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(CLIENTID) );
+        /* ptr = calloc( 1, sizeof(CLIENTID) ); */
+        ptr = malloc( sizeof(CLIENTID) );
+        memset( ptr, 0, sizeof(CLIENTID) );
+	/* printf( "calloc returned 0x%p\n", ptr ); */
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "CLIENTID_PTR", ptr);
@@ -1272,9 +1283,12 @@ void
 DESTROY( clientid_ptr )
     CLIENTID_PTR  clientid_ptr
     CODE:
+        /* printf( "CLIENTID_PTR::DESTROY()\n" ); */
         if ( clientid_ptr != NULL )
         {
+	    /* printf( "free( 0x%p )\n", clientid_ptr ); */
             free( (char *)clientid_ptr );
+            /* printf( "finished calling free.\n" ); */
         }
 
 void
@@ -1306,7 +1320,9 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(TPTRANID) );
+        /* ptr = calloc( 1, sizeof(TPTRANID) ); */
+        ptr = malloc( sizeof(TPTRANID) );
+        memset( ptr, 0, sizeof(TPTRANID) );
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "TPTRANID_PTR", ptr);
@@ -1317,8 +1333,13 @@ void
 DESTROY( tptranid_ptr )
     TPTRANID_PTR  tptranid_ptr
     CODE:
+        /* printf( "TPTRANID_PTR::DESTROY()\n" ); */
         if ( tptranid_ptr != NULL )
+        {
+            /* printf( "free( 0x%p )\n", tptranid_ptr ); */
             free( (char *)tptranid_ptr );
+            /* printf( "finished calling free.\n" ); */
+        }
 
 void
 info( obj, ... )
@@ -1350,7 +1371,9 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(XID) );
+        /* ptr = calloc( 1, sizeof(XID) ); */
+        ptr = malloc( sizeof(XID) );
+        memset( ptr, 0, sizeof(XID) );
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "XID_PTR", ptr);
@@ -1363,7 +1386,9 @@ DESTROY( obj )
     CODE:
         if ( obj != NULL )
         {
+            /* printf( "%s:%d free( 0x%p )\n", __FILE__, __LINE__, obj ); */
             free( (char *)obj );
+            /* printf( "finished calling free.\n" ); */
         }
 
 long 
@@ -1419,7 +1444,9 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(TPQCTL) );
+        /* ptr = calloc( 1, sizeof(TPQCTL) ); */
+        ptr = malloc( sizeof(TPQCTL) );
+        memset( ptr, 0, sizeof(TPQCTL) );
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "TPQCTL_PTR", ptr);
@@ -1432,6 +1459,7 @@ DESTROY( obj )
     CODE:
         if ( obj != NULL )
         {
+            /* printf( "%s:%d free( 0x%p )\n", __FILE__, __LINE__, obj ); */
             free( (char *)obj );
         }
 
@@ -1602,7 +1630,9 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(TPEVCTL) );
+        /* ptr = calloc( 1, sizeof(TPEVCTL) ); */
+        ptr = malloc( sizeof(TPEVCTL) );
+        memset( ptr, 0, sizeof(TPEVCTL) );
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "TPEVCTL_PTR", ptr);
@@ -1615,6 +1645,7 @@ DESTROY( obj )
     CODE:
         if ( obj != NULL )
         {
+            /* printf( "%s:%d free( 0x%p )\n", __FILE__, __LINE__, obj ); */
             free( (char *)obj );
         }
 
@@ -1669,7 +1700,9 @@ new()
     PREINIT:
         char *ptr;
     CODE:
-        ptr = calloc( 1, sizeof(TXINFO) );
+        /* ptr = calloc( 1, sizeof(TXINFO) ); */
+        ptr = malloc( sizeof(TXINFO) );
+        memset( ptr, 0, sizeof(TXINFO) );
         ST(0) = sv_newmortal();
         if ( ptr != NULL )
             sv_setref_pv(ST(0), "TXINFO_PTR", ptr);
@@ -1682,6 +1715,7 @@ DESTROY( obj )
     CODE:
         if ( obj != NULL )
         {
+            /* printf( "%s:%d free( 0x%p )\n", __FILE__, __LINE__, obj ); */
             free( (char *)obj );
         }
 

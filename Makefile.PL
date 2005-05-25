@@ -14,6 +14,7 @@ my %opts = (
 if ( $os eq 'MSWin32' )
 {
     $opts{LIBS} = [ "-L$ENV{TUXDIR}/lib -llibtux -llibbuft -llibfml -llibfml32 -llibengine -lwsock32 -lkernel32 -ladvapi32 -luser32 -lgdi32 -lcomdlg32 -lwinspool" ];
+    $opts{DEFINE} = "-D__TURBOC__";
 }
 
 # -- unix variants..tested on solaris

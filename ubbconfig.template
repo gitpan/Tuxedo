@@ -4,8 +4,8 @@ MODEL           SHM
 MASTER          <HOSTNAME>
 
 *MACHINES
-<HOSTNAME>      
-                LMID=<HOSTNAME>
+"<HOSTNAME>"
+                LMID="<HOSTNAME>"
                 TUXDIR="<TUXDIR>"
                 APPDIR="<APPDIR>"
                 TUXCONFIG="<TUXCONFIG>"

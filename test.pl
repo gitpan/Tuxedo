@@ -22,7 +22,7 @@ require "genubbconfig.pl";
 # Create a ubbconfig and boot the tuxedo system that this test
 # script will connect to as a workstation tuxedo client.
 ###################################################################
-$ENV{TUXCONFIG} = get_tuxconfig();
+tuxputenv( "TUXCONFIG=" . get_tuxconfig() );
 system( "tmshutdown -y" );
 
 gen_ubbconfig();
@@ -68,8 +68,8 @@ print "SUBTYPE: " . $subtype . "\n";
 print "ok 3\n";
 
 # TEST 3: tuxputenv and tuxgetenv
-tuxputenv( "WSNADDR=" . get_wsnaddr() );
-print "WSNADDR = " . tuxgetenv( "WSNADDR" ) . "\n";
+
+print "TUXCONFIG = " . tuxgetenv( "TUXCONFIG" ) . "\n";
 
 # TEST 4: tpinit, tperrno and tpstrerror
 my $rval = tpinit( $buffer );
@@ -260,6 +260,7 @@ $rval = tpnotify( $clientid, $unsolbuf, 0, 0 );
 if ( $rval == -1 ) {
     die ( "tpnotify failed: " . tpstrerror(tperrno) . "\n" );
 }
+$clientid = 0;
 
 # TEST Usignal
 Usignal( 17, \&sigusr2 );
