@@ -230,7 +230,7 @@ handlePerlSignals()
 */
 
 
-MODULE = TUXEDO    PACKAGE = TUXEDO        
+MODULE = Tuxedo    PACKAGE = Tuxedo        
 
 BOOT:
     InitTuxedoConstants();
@@ -1131,7 +1131,7 @@ Fmkfldid32( type, num )
 
 
 
-MODULE = TUXEDO        PACKAGE = CHAR_PTR        
+MODULE = Tuxedo        PACKAGE = CHAR_PTR        
 
 void
 DESTROY( char_ptr )
@@ -1146,7 +1146,7 @@ DESTROY( char_ptr )
         }
 
 
-MODULE = TUXEDO        PACKAGE = TPINIT_PTR        
+MODULE = Tuxedo        PACKAGE = TPINIT_PTR        
 
 char *
 usrname( obj, ... )
@@ -1259,10 +1259,10 @@ data( obj, ... )
         RETVAL
 
 
-MODULE = TUXEDO        PACKAGE = FBFR32_PTR        
+MODULE = Tuxedo        PACKAGE = FBFR32_PTR        
 
 
-MODULE = TUXEDO        PACKAGE = CLIENTID_PTR
+MODULE = Tuxedo        PACKAGE = CLIENTID_PTR
 
 void
 new()
@@ -1314,7 +1314,7 @@ clientdata( obj, ... )
             PUSHs( sv_2mortal(newSViv( obj->clientdata[i])) );
 
 
-MODULE = TUXEDO        PACKAGE = TPTRANID_PTR
+MODULE = Tuxedo        PACKAGE = TPTRANID_PTR
 void
 new()
     PREINIT:
@@ -1365,7 +1365,7 @@ info( obj, ... )
             PUSHs( sv_2mortal(newSViv( obj->info[i])) );
 
 
-MODULE = TUXEDO        PACKAGE = XID_PTR
+MODULE = Tuxedo        PACKAGE = XID_PTR
 void
 new()
     PREINIT:
@@ -1437,7 +1437,7 @@ data( obj, ... )
     OUTPUT:
         RETVAL
 
-MODULE = TUXEDO        PACKAGE = TPQCTL_PTR
+MODULE = Tuxedo        PACKAGE = TPQCTL_PTR
 
 void
 new()
@@ -1623,7 +1623,7 @@ exp_time( obj, ... )
     OUTPUT:
         RETVAL
 
-MODULE = TUXEDO        PACKAGE = TPEVCTL_PTR
+MODULE = Tuxedo        PACKAGE = TPEVCTL_PTR
 
 void
 new()
@@ -1693,7 +1693,7 @@ qctl( obj, ... )
 	sv_setref_pv(ST(0), "TPQCTL_PTR", (void*)&obj->qctl);
         SvREFCNT_inc( SvRV(ST(0)) );
 
-MODULE = TUXEDO        PACKAGE = TXINFO_PTR
+MODULE = Tuxedo        PACKAGE = TXINFO_PTR
 
 void
 new()
@@ -1769,7 +1769,7 @@ transaction_state( obj, ... )
     OUTPUT:
         RETVAL
 
-MODULE = TUXEDO        PACKAGE = TPSVCINFO_PTR
+MODULE = Tuxedo        PACKAGE = TPSVCINFO_PTR
 
 void 
 data( obj )

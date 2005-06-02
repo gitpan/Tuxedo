@@ -1,4 +1,4 @@
-package TUXEDO;
+package Tuxedo;
 
 use TPINIT_PTR;
 use FBFR32_PTR;
@@ -266,7 +266,7 @@ require AutoLoader;
     SIGUSR2
     SIGWINCH
 );
-$VERSION = '2.05';
+$VERSION = '2.06';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -283,7 +283,7 @@ sub AUTOLOAD {
 	    goto &AutoLoader::AUTOLOAD;
 	}
 	else {
-		croak "Your vendor has not defined TUXEDO macro $constname";
+		croak "Your vendor has not defined Tuxedo macro $constname";
 	}
     }
     no strict 'refs';
@@ -298,7 +298,7 @@ sub AUTOLOAD {
     goto &$AUTOLOAD;
 }
 
-bootstrap TUXEDO $VERSION;
+bootstrap Tuxedo $VERSION;
 
 # Preloaded methods go here.
 
@@ -310,11 +310,11 @@ __END__
 
 =head1 NAME
 
-TUXEDO - Perl extension module for Tuxedo
+Tuxedo - Perl extension module for Tuxedo
 
 =head1 SYNOPSIS
 
-use TUXEDO;
+use Tuxedo;
 
 =head1 DESCRIPTION
 
@@ -324,7 +324,7 @@ This module provides the following functionality...
 
 =item * B<'C' style interface>
 
-The TUXEDO perl module gives you access to almost all of the tuxedo 8.1 apis from perl.  In most cases you can take the C API you already familiar with, apply perl semantics to it, and write working tuxedo programs in perl.
+The Tuxedo perl module gives you access to almost all of the tuxedo 8.1 apis from perl.  In most cases you can take the C API you already familiar with, apply perl semantics to it, and write working tuxedo programs in perl.
 
 =item * B<Object wrapping of C structures>
 
@@ -358,16 +358,16 @@ The ability to write tuxedo services in perl
 
 =item * B<An object oriented tuxedo interface>
 
-Version 1 of the TUXEDO module only presented an object oriented interface to the user.  This version of the TUXEDO module presents the original C interface to make perl tuxedo development easier for experienced tuxedo programmers.  The object oriented interface will co-exist with the C interface in a future version of this module.
+Version 1 of the Tuxedo module only presented an object oriented interface to the user.  This version of the Tuxedo module presents the original C interface to make perl tuxedo development easier for experienced tuxedo programmers.  The object oriented interface will co-exist with the C interface in a future version of this module.
 
 =back
 
 =head1 'C' STYLE INTERFACE
 
-An example is probably the best way to demonstrate the interface provided by the TUXEDO perl module for writing tuxedo programs.  The following example shows how to connect to a tuxedo system and make a service call.
+An example is probably the best way to demonstrate the interface provided by the Tuxedo perl module for writing tuxedo programs.  The following example shows how to connect to a tuxedo system and make a service call.
 
 
-  use TUXEDO;
+  use Tuxedo;
   use tpadm;
 
   my $password = "password";
@@ -421,7 +421,7 @@ An example is probably the best way to demonstrate the interface provided by the
 
 =head1 OBJECT WRAPPING OF C STRUCTURES
 
-The TUXEDO module provides perl objects for creating and reading/writing elements of tuxedo C structures.  The objects and methods available are...
+The Tuxedo module provides perl objects for creating and reading/writing elements of tuxedo C structures.  The objects and methods available are...
 
 =over 2
 
@@ -694,7 +694,7 @@ Another benefit of this approach is that a DESTROY method is automatically calle
 
 =head1 CALLBACK SUBS
 
-The TUXEDO module allows you to create perl subs that are registered as unsolicited message and signal handers.  The example below demonstrates how to do this.
+The Tuxedo module allows you to create perl subs that are registered as unsolicited message and signal handers.  The example below demonstrates how to do this.
 
   # create a sub to use as an unsolicited message handler
   sub unsol_msg_handler

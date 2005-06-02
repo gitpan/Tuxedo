@@ -1,8 +1,8 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         TUXEDO
-version:      2.05
-version_from: TUXEDO.pm
+name:         Tuxedo
+version:      2.06
+version_from: Tuxedo.pm
 installdirs:  site
 requires:
 

@@ -1,5 +1,5 @@
 #! perl -Iblib/arch -Iblib/lib
-use TUXEDO;
+use Tuxedo;
 
 $numargs = @ARGV;
 if ( $numargs == 0 )

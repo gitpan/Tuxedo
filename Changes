@@ -6,3 +6,4 @@ Revision history for Perl extension TUXEDO.
 2.05 - changed calloc to malloc + memset because calloc caused perl crash on windows when freeing memory during global destruction.
      - Now builds and runs on WIN32
 
+2.06 - changed module and package name from 'TUXEDO' to 'Tuxedo' to follow cpan standards. 

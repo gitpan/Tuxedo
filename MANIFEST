@@ -3,8 +3,8 @@ MANIFEST
 Makefile.PL
 TPINIT_PTR.pm
 FBFR32_PTR.pm
-TUXEDO.pm
-TUXEDO.xs
+Tuxedo.pm
+Tuxedo.xs
 TuxedoConstants.c
 README
 tpadm.pm
