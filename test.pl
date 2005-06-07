@@ -267,6 +267,28 @@ Usignal( 17, \&sigusr2 );
 printf( "My process id is $$\n" );
 
 
+# Test STRING buffer
+my $string = tpalloc( "STRING", 0, 1024 );
+if ( not defined $string ) {
+    die ( "tpalloc failed: " . tpstrerror(tperrno) . "\n" );
+}
+$string->value( "fat boy" );
+printf( "\$string = " . $string->value . "\n" );
+
+# Test PERLSVR TOUPPER
+$rval = tpcall( "TOUPPER", $string, 0, $string, $len, 0 );
+if ( $rval == -1 ) {
+    die ( "tpcall failed: " . tpstrerror(tperrno) . "\n" );
+}
+printf( "\$string = " . $string->value . "\n" );
+
+# Test PERLSVR REVERSE
+$rval = tpcall( "REVERSE", $string, 0, $string, $len, 0 );
+if ( $rval == -1 ) {
+    die ( "tpcall failed: " . tpstrerror(tperrno) . "\n" );
+}
+printf( "\$string = " . $string->value . "\n" );
+
 # TEST 5: tpterm
 $rval = tpterm();
 if ( $rval == -1 ) {

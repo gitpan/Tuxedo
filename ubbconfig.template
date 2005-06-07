@@ -19,5 +19,8 @@ APPGRP          LMID=<HOSTNAME> GRPNO=2
 #WSL             SRVID=1 SRVGRP=TUXGRP
 #                CLOPT="-A -- -n <WSNADDR>"
 
+PERLSVR         SRVID=1 SRVGRP=APPGRP
+                CLOPT="-A --"
+
 *SERVICES
 

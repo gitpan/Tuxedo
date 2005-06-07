@@ -10,10 +10,17 @@
 #include <Usignal.h>
 #include <userlog.h>
 
+/*--------------------------------------------------------------------------------
+ * function prototypes
+ *--------------------------------------------------------------------------------*/
 void InitTuxedoConstants();
 long getTuxedoConstant( char *name );
 
+/*--------------------------------------------------------------------------------
+ * type definitions
+ *--------------------------------------------------------------------------------*/
 typedef char *          CHAR_PTR;
+typedef char *          STRING_PTR;
 typedef TPINIT *        TPINIT_PTR;
 typedef FBFR32 *        FBFR32_PTR;
 typedef CLIENTID *      CLIENTID_PTR;
@@ -24,8 +31,21 @@ typedef TPEVCTL *       TPEVCTL_PTR;
 typedef TXINFO *        TXINFO_PTR;
 typedef TPSVCINFO *     TPSVCINFO_PTR;
 
-static HV * UnsolicitedHandlerMap = (HV *)NULL;
+/*--------------------------------------------------------------------------------
+ * definitions
+ *--------------------------------------------------------------------------------*/
+#define PERL_TUXEDO_ERROR       (0xFFFFFFFFFFFFFFFF + 1)
 
+/*--------------------------------------------------------------------------------
+ * global variables
+ *--------------------------------------------------------------------------------*/
+static HV * UnsolicitedHandlerMap = (HV *)NULL;
+static HV * signum                = (HV *)NULL;
+static HV * SignalHandlerMap      = (HV *)NULL;
+
+/*--------------------------------------------------------------------------------
+ * 'C' functions used by this module
+ *--------------------------------------------------------------------------------*/
 void _TMDLLENTRY
 unsolicited_message_handler( data, len, flags )
     char * data;
@@ -73,9 +93,6 @@ unsolicited_message_handler( data, len, flags )
     /* call the Perl sub */
     perl_call_sv( *sv, G_DISCARD );
 }
-
-
-static HV * signum        = (HV *)NULL;
 
 static void
 signum_init()
@@ -129,19 +146,8 @@ signum_init()
         sig_name = nameDelim + 1;
     }
 
-/*
-    hv_iterinit( signum );
-    value =  hv_iternextsv( signum, &sig_name, &len );
-    while ( value != NULL )
-    {
-        signumIV = SvIV( value );
-        printf( "signum{%s} = %d\n", sig_name, signumIV );
-        value =  hv_iternextsv( signum, &sig_name, &len );
-    }
-*/
 }
 
-static HV * SignalHandlerMap = (HV *)NULL;
 
 static void
 signal_handler( sig_num )
@@ -181,55 +187,185 @@ int buffer_setref( SV * sv, char *buffer )
             sv_setref_pv(sv, "TPINIT_PTR", (void*)buffer);
         else if ( !strcmp(type, "FML32") )
             sv_setref_pv(sv, "FBFR32_PTR", (void*)buffer);
+        else if ( !strcmp(type, "STRING") )
+            sv_setref_pv(sv, "STRING_PTR", (void*)buffer);
         else
             sv_setref_pv(sv, Nullch, (void*)buffer);
     }
     return rc;
 }
 
-/*
- * Should eventually remove this completely from this module
- *
-void
-handlePerlSignals()
-    PREINIT:
-    char * key;
-    IV signumIV;
-    I32 len;
-    SV * value;
-    HV * SIG;
-    STRLEN n_a;
-    SV ** sv;
-    CODE:
-    SIG = get_hv( "SIG", FALSE );
-    if ( SIG != NULL )
+/*--------------------------------------------------------------------------------
+ * server only 'C' functions
+ *--------------------------------------------------------------------------------*/
+static HV * serviceMap = (HV *)NULL;
+
+EXTERN_C void xs_init (pTHX);
+EXTERN_C void boot_DynaLoader (pTHX_ CV* cv);
+
+static PerlInterpreter *embedded_perl;
+
+EXTERN_C void
+xs_init(pTHX)
+{
+        char *file = __FILE__;
+        dXSUB_SYS;
+
+        /* DynaLoader is a special case */
+        newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, file);
+}
+
+EXTERN_C
+int tpsvrinit( int argc, char *argv[] )
+{
+    char *embedding[] = { "", "perlsvr.pl" };
+    int rc = 0;
+
+    embedded_perl = perl_alloc();
+    if ( embedded_perl == NULL )
     {
-        hv_iterinit( SIG );
-        value = hv_iternextsv( SIG, &key, &len );
-        while ( value != NULL )
+        userlog( "Failed to instantiated Perl interpretor." );
+        return -1;
+    }
+
+    perl_construct( embedded_perl );
+
+    rc = perl_parse( embedded_perl, xs_init, 2, embedding, NULL );
+    if ( rc != 0 )
+    {
+        userlog( "Failed to parse perlsvr.pl" );
+        perl_destruct( embedded_perl );
+        perl_free( embedded_perl );
+        return -1;
+    }
+
+    perl_run( embedded_perl );
+    return 1;
+}
+
+EXTERN_C
+void tpsvrdone()
+{
+    perl_destruct( embedded_perl );
+    perl_free( embedded_perl );
+}
+
+EXTERN_C
+void PERL( TPSVCINFO * tpsvcinfo )
+{
+    int rc;
+    char type[16];
+    SV * rv;
+    SV ** sub;
+    SV   *rData = NULL;
+
+    /* return values from perl function call */
+    int rval    = TPFAIL;
+    long rcode  = PERL_TUXEDO_ERROR;
+    char *data  = NULL;
+    long len    = 0;
+    long flags  = 0;
+
+    /* get the perl sub associated with this service */
+    sub = hv_fetch( serviceMap, 
+                    (char *)tpsvcinfo->name,
+                    strlen(tpsvcinfo->name),
+                    FALSE
+                    );
+
+    if ( sub == (SV**)NULL )
+    {
+        /* this is a serious error */
+        data = tpalloc( "STRING", 0, 1024 );
+        if ( data != NULL )
+            sprintf( data, "%s is not associated with a perl sub", tpsvcinfo->name );
+        tpreturn( TPFAIL, 0, data, 0, 0 );
+    }
+
+    /* set up the perl stack */
+    dSP;
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    PUTBACK;
+
+    /* create the TPSVCINFO reference and push it onto the stack */
+    rv = sv_newmortal();
+    sv_setref_pv(rv, "TPSVCINFO_PTR", (void*)tpsvcinfo);
+    XPUSHs( rv );
+    PUTBACK;
+
+    /* call the perl sub */
+    rc = perl_call_sv( *sub, G_EVAL | G_ARRAY );
+
+    SPAGAIN;
+
+    /* check the eval first */
+    if ( SvTRUE(ERRSV) )
+    {
+        /* the sub died somewhere */
+        data = tpalloc( "STRING", 0, 1024 );
+        if ( data != NULL )
         {
-            if ( SvOK(value) )
-            {
-                sv = hv_fetch( signum, 
-                               (char *)key,
-                               strlen(key),
-                               FALSE
-                               );
+            sprintf( data, "%s failed with exception: %s", 
+                     tpsvcinfo->name, SvPV(ERRSV, PL_na)
+                     );
+        }
 
-                if ( sv != NULL )
-                {
-                    signumIV = SvIV( *sv );
-                    printf( "Setting Perl signal handler for SIG%s [%d]\n", key, signumIV );
-                    Usignal( signumIV, Perl_sighandler );
-                }
-            }
-
-            value = hv_iternextsv( SIG, &key, &len );
+        POPs;
+    }
+    else if ( rc != 5 )
+    {
+        /* insufficient parameters returned from the sub */
+        data = tpalloc( "STRING", 0, 1024 );
+        if ( data != NULL )
+        {
+            sprintf( data, "%s only returned %d arguments", 
+                     tpsvcinfo->name, rc
+                     );
         }
     }
-*/
+    else
+    {
+        /* extract return values from the stack in reverse order */
+        flags = POPl; len = POPl; rData = POPs; rcode = POPl; rval = POPi; 
+
+        /* rData must be a reference to a tuxedo buffer */
+        if ( SvROK(rData) ) 
+        {
+            IV tmp = SvIV((SV*)SvRV(rData));
+            data = INT2PTR(CHAR_PTR, tmp);
+        }
+        else
+        {
+            data = tpalloc( "STRING", 0, 1024 );
+            if ( data != NULL )
+            {
+                sprintf( data, "%s returned invalid data reference", 
+                         tpsvcinfo->name
+                         );
+            }
+            rval   = TPFAIL; 
+            rcode  = PERL_TUXEDO_ERROR; 
+            data   = data; 
+            len    = 0; 
+            flags  = 0; 
+        }
+    }
+
+    /* clear the perl stack and cleanup */
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+
+    tpreturn( rval, rcode, data, len, flags );
+}
 
 
+
+/*--------------------------------------------------------------------------------
+ * xsub functions 
+ *--------------------------------------------------------------------------------*/
 MODULE = Tuxedo    PACKAGE = Tuxedo        
 
 BOOT:
@@ -259,6 +395,28 @@ int
 tpabort( flags )
     long flags
 
+int
+tpadvertise( svcname, callback )
+    char *svcname
+    SV * callback
+    PREINIT:
+    CODE:
+        RETVAL = tpadvertise( svcname, PERL );
+        if ( RETVAL != -1 )
+        {
+            if ( serviceMap == (HV*)NULL )
+                serviceMap = newHV();
+
+            hv_store( serviceMap, 
+                      svcname,
+                      strlen(svcname), 
+                      newSVsv(callback),
+                      0
+                      );
+        }
+    OUTPUT:
+        RETVAL
+
 void
 tpalloc(type,subtype,size)
     char *type
@@ -275,6 +433,8 @@ tpalloc(type,subtype,size)
                 sv_setref_pv(ST(0), "TPINIT_PTR", (void*)ptr);
             else if ( !strcmp(type, "FML32") )
                 sv_setref_pv(ST(0), "FBFR32_PTR", (void*)ptr);
+            else if ( !strcmp(type, "STRING") )
+                sv_setref_pv(ST(0), "STRING_PTR", (void*)ptr);
             else
                 sv_setref_pv(ST(0), Nullch, (void*)ptr);
         }
@@ -867,6 +1027,11 @@ tpcall( svc, idata, ilen, odata, len, flags )
          */
 	sv_setiv(SvRV(odata), (IV)obuf);
 
+        if ( RETVAL == TPFAIL && tpurcode == PERL_TUXEDO_ERROR )
+        {
+            croak( "tpcall failed with server side perl error: %s", obuf );
+        }
+
     OUTPUT:
         RETVAL
         len
@@ -1144,6 +1309,42 @@ DESTROY( char_ptr )
             tpfree( char_ptr );
             /* printf( "finished calling tpfree\n" ); */
         }
+
+MODULE = Tuxedo        PACKAGE = STRING_PTR        
+
+char *
+value( obj, ... )
+    STRING_PTR obj
+    PREINIT:
+    char *value = NULL;
+    long size   = 0;
+    STRLEN n_a;
+    CODE:
+        if ( items > 1 )
+        {
+            value = (char *)SvPV( ST(1), n_a );
+
+            /* get the size of the buffer */
+            size = tptypes( obj, NULL, NULL );
+            if ( size == -1 )
+	        croak( "STRING_PTR::value() failed: %s", tpstrerror(tperrno) );
+
+            if ( size <= strlen(value) )
+            {
+                /* need to allocate more space */
+                obj = tprealloc( obj, strlen(value) + 1 );
+                if ( obj == NULL )
+	            croak( "STRING_PTR::value() failed: %s", tpstrerror(tperrno) );
+
+                /* the obj pointer could have changed, so reset the reference */
+                sv_setref_pv(ST(0), "STRING_PTR", (void*)obj);
+            }
+
+            strcpy( obj, value );
+        }
+        RETVAL = obj;
+    OUTPUT:
+        RETVAL
 
 
 MODULE = Tuxedo        PACKAGE = TPINIT_PTR        

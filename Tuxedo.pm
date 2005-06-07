@@ -1,7 +1,14 @@
+package TPINIT_PTR; 
+@ISA = qw(CHAR_PTR);
+
+package FBFR32_PTR; 
+@ISA = qw(CHAR_PTR);
+
+package STRING_PTR; 
+@ISA = qw(CHAR_PTR);
+
 package Tuxedo;
 
-use TPINIT_PTR;
-use FBFR32_PTR;
 use strict;
 use Carp;
 use Config;
@@ -141,6 +148,7 @@ require AutoLoader;
 
     tpabort
     tpacall
+    tpadvertise
     tpalloc	
     tpbegin	
     tpbroadcast	
@@ -266,7 +274,7 @@ require AutoLoader;
     SIGUSR2
     SIGWINCH
 );
-$VERSION = '2.06';
+$VERSION = '2.07';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -299,6 +307,7 @@ sub AUTOLOAD {
 }
 
 bootstrap Tuxedo $VERSION;
+
 
 # Preloaded methods go here.
 
@@ -342,6 +351,41 @@ perl subs can be registered as unsolicited message handlers and signal handlers.
 
 This module includes the mkfldpm32.pl script that is the perl equivalent of the tuxedo mkfldhdr32 program.  It accepts a field table file as input and produces a *.pm file that can be included in a perl script, so field identifiers can be referenced by id.
 
+=item * B<perl tuxedo services>
+
+You can now write tuxedo services in perl.  When you build the Tuxedo module, it should create a tuxedo server called PERLSVR.  This is a tuxedo server that contains an embedded perl interpretor for executing perl tuxedo services.  When PERLSVR boots up, it parses the perlsvr.pl script, which at the moment it expects to find in its working directory.  The location of perlsvr.pl will be configurable in a future version.  The perlsvr.pl script is run as the tpsvrinit routine.  You can modify perlsvr.pl to define any subs you want to be tuxedo services and advertise these subs.  
+
+There are a few rules for writing subs that are to be run as tuxedo services. 
+
+
+1) They must accept a single input parameter which is a reference to a TPSVCINFO_PTR object.
+
+2) They must return 5 parameters corresponding to the parameters of the tpreturn tuxedo function.  You don't call tpreturn directly from a perl sub tuxedo service.  When the sub returns, the PERLSVR will extract the return values from the perl stack and call tpreturn for you.
+
+
+
+Below is the perlsvr.pl that is included with this distribution.  It demonstrates how to write and advertise two simple perl subs that act as tuxedo services.
+
+  use Tuxedo;
+  
+  sub TOUPPER {
+      my ($tpsvcinfo) = @_;
+      my ($inbuf) = $tpsvcinfo->data;
+      $inbuf->value( ($newval = uc($inbuf->value)) );
+      return ( TPSUCCESS, 0, $inbuf, $tpsvcinfo->len, 0 );
+  }
+
+  sub REVERSE {
+      my ($tpsvcinfo) = @_;
+      my ($buf) = $tpsvcinfo->data;
+      $buf->value( ($newval = reverse($buf->value)) );
+      return ( TPSUCCESS, 0, $buf, $tpsvcinfo->len, 0 );
+  }
+
+  tpadvertise( "TOUPPER", \&TOUPPER );
+  tpadvertise( "REVERSE", \&REVERSE );
+
+
 =back
 
 B<Future versions of this module will include>
@@ -351,10 +395,6 @@ B<Future versions of this module will include>
 =item * B<workstation and native modules>
 
 Different modules will exist for native and workstation tuxedo development.  Currently native is the default.
-
-=item * B<perl tuxedo services>
-
-The ability to write tuxedo services in perl
 
 =item * B<An object oriented tuxedo interface>
 
