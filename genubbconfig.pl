@@ -4,6 +4,9 @@ my $os = $^O;
 ############# Global Variables ##############
 my $cwd;
 chomp( my $hostname = `hostname`);
+if ( defined $ENV{PMID} ) {
+        $hostname = $ENV{PMID};
+}
 
 if ( $os eq 'MSWin32' ) {
 	eval "use Win32";

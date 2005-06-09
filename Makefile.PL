@@ -2,6 +2,9 @@ use ExtUtils::MakeMaker;
 use ExtUtils::Embed;
 use Config;
 
+# create the xsinit routine
+xsinit("perlxsi.c");
+
 my $os = $^O;
 
 # get the ldopts used to build perl
@@ -15,7 +18,6 @@ my $libpaths = join " ", @tmp;
 #get the DynaLoader archive for linking with AIX
 @tmp = grep /DynaLoader/, @ldopts_elements;
 my $dynaloader_lib = join " ", @tmp;
-printf( "dynaloader_lib = $dynaloader_lib\n" );
 
 # can get rid of the libpaths from the ldopts now
 $ldopts =~ s/\s-L\S*//g;
@@ -23,13 +25,14 @@ $ldopts =~ s/\s-L\S*//g;
 my %opts = (
     NAME         => 'Tuxedo',
     VERSION_FROM => 'Tuxedo.pm',
-    'C'          => [ 'TuxedoConstants.c' ],
-    'OBJECT'     => 'TuxedoConstants.o Tuxedo.o',
+    'C'          => [ 'TuxedoConstants.c', 'perlxsi.c' ],
+    'OBJECT'     => 'TuxedoConstants.o Tuxedo.o perlxsi.o',
     'INC'        => "-I $ENV{TUXDIR}/include",
     'DL_FUNCS'   => { "\$(NAME)" => ["boot_\$(NAME)" ] },
-    'FUNCLIST'   => [ "PERL", "tpsvrinit", "tpsvrdone" ],
+    'FUNCLIST'   => [ "PERL", "tpsvrinit", "tpsvrdone", "settmsvrargs" ],
     'clean'      => { FILES => "ULOG.* ubbconfig TUXCONFIG *.tar.gz stderr stdout" }
 );
+
 
 # --- How shall we link with Tuxedo?
 if ( $os eq 'MSWin32' )
@@ -63,17 +66,29 @@ sub MY::postamble
 ###########################################################
 PERL_EMBED_LIBS=$ldopts
 
-BUILDSERVER = CC="$Config{cc} $libpaths"; export CC; \$(TUXDIR)/bin/buildserver
-
 PERL_TARGET=PERLSVR\$(EXE_EXT)
 
-\$(PERL_TARGET): \$(INST_DYNAMIC)
-	\$(BUILDSERVER) -o \$@ -s ":PERL" -f "\$(INST_DYNAMIC)" -f "\$(PERL_EMBED_LIBS)"
+\$(PERL_TARGET): \$(INST_DYNAMIC) 
+EOS
+if ( $os eq 'MSWin32' ) {
+	$string = $string . <<EOS;
+	set CC="$Config{cc} $libpaths"
+	buildserver -o \$@ -k -s "PERL" -f "-DTMMAINEXIT \$(INST_STATIC)"
+EOS
+}
+else {
+	$string = $string . <<EOS;
+	CC="$Config{cc} $libpaths"; export CC; \$(TUXDIR)/bin/buildserver -o \$@ -s ":PERL" -f "\$(INST_DYNAMIC)" -f "\$(PERL_EMBED_LIBS)"
+EOS
+}
+
+
+$string = $string . <<EOS;
 
 pure_all :: \$(PERL_TARGET)
 
 clean ::
-	rm -f \$(PERL_TARGET) 
+	\$(RM_RF) \$(PERL_TARGET) perlxsi.c
 
 EOS
 

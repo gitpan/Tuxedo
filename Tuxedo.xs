@@ -10,15 +10,31 @@
 #include <Usignal.h>
 #include <userlog.h>
 
-/*--------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
+ * definitions
+ *----------------------------------------------------------------------------*/
+#define PERL_TUXEDO_ERROR       (-0x0FFFFFFF)
+
+#ifdef is_cplusplus
+#  ifndef EXTERN_C
+#    define EXTERN_C extern "C"
+#  endif
+#else
+#  ifndef EXTERN_C
+#    define EXTERN_C extern
+#  endif
+#endif
+
+/*----------------------------------------------------------------------------
  * function prototypes
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 void InitTuxedoConstants();
 long getTuxedoConstant( char *name );
+void xs_init _((void));
 
-/*--------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
  * type definitions
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 typedef char *          CHAR_PTR;
 typedef char *          STRING_PTR;
 typedef TPINIT *        TPINIT_PTR;
@@ -31,21 +47,17 @@ typedef TPEVCTL *       TPEVCTL_PTR;
 typedef TXINFO *        TXINFO_PTR;
 typedef TPSVCINFO *     TPSVCINFO_PTR;
 
-/*--------------------------------------------------------------------------------
- * definitions
- *--------------------------------------------------------------------------------*/
-#define PERL_TUXEDO_ERROR       (0xFFFFFFFFFFFFFFFF + 1)
 
-/*--------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
  * global variables
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 static HV * UnsolicitedHandlerMap = (HV *)NULL;
 static HV * signum                = (HV *)NULL;
 static HV * SignalHandlerMap      = (HV *)NULL;
 
-/*--------------------------------------------------------------------------------
+/*----------------------------------------------------------------------------
  * 'C' functions used by this module
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 void _TMDLLENTRY
 unsolicited_message_handler( data, len, flags )
     char * data;
@@ -94,6 +106,11 @@ unsolicited_message_handler( data, len, flags )
     perl_call_sv( *sv, G_DISCARD );
 }
 
+/*
+ * Comment this function out because it get_hv doesn't work with
+ * perl 5.005_03 on solaris.  I shouldn't really have this function
+ * anyway.
+ *
 static void
 signum_init()
 {
@@ -104,8 +121,6 @@ signum_init()
     char *nameDelim;
     STRLEN n_a;
     SV **svPtr;
-    SV * value;
-    I32 len;
 
     HV * Config = get_hv( "Config", FALSE );
 
@@ -147,6 +162,8 @@ signum_init()
     }
 
 }
+
+*/
 
 
 static void
@@ -195,25 +212,12 @@ int buffer_setref( SV * sv, char *buffer )
     return rc;
 }
 
-/*--------------------------------------------------------------------------------
+
+/*----------------------------------------------------------------------------
  * server only 'C' functions
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 static HV * serviceMap = (HV *)NULL;
-
-EXTERN_C void xs_init (pTHX);
-EXTERN_C void boot_DynaLoader (pTHX_ CV* cv);
-
 static PerlInterpreter *embedded_perl;
-
-EXTERN_C void
-xs_init(pTHX)
-{
-        char *file = __FILE__;
-        dXSUB_SYS;
-
-        /* DynaLoader is a special case */
-        newXS("DynaLoader::boot_DynaLoader", boot_DynaLoader, file);
-}
 
 EXTERN_C
 int tpsvrinit( int argc, char *argv[] )
@@ -258,6 +262,7 @@ void PERL( TPSVCINFO * tpsvcinfo )
     SV * rv;
     SV ** sub;
     SV   *rData = NULL;
+    dSP;
 
     /* return values from perl function call */
     int rval    = TPFAIL;
@@ -283,7 +288,6 @@ void PERL( TPSVCINFO * tpsvcinfo )
     }
 
     /* set up the perl stack */
-    dSP;
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
@@ -333,8 +337,7 @@ void PERL( TPSVCINFO * tpsvcinfo )
         /* rData must be a reference to a tuxedo buffer */
         if ( SvROK(rData) ) 
         {
-            IV tmp = SvIV((SV*)SvRV(rData));
-            data = INT2PTR(CHAR_PTR, tmp);
+            data = (CHAR_PTR)SvIV((SV*)SvRV(rData));
         }
         else
         {
@@ -361,17 +364,35 @@ void PERL( TPSVCINFO * tpsvcinfo )
     tpreturn( rval, rcode, data, len, flags );
 }
 
+typedef void (* TUXEDOSERVICE)(TPSVCINFO *);
+TUXEDOSERVICE gdispatch = PERL;
+
+static struct tmsvrargs_t * gtmsvrargs = NULL;
+EXTERN_C
+void settmsvrargs( struct tmsvrargs_t * tmsvrargs )
+{
+	int i;
+	gtmsvrargs = tmsvrargs;
+
+	for ( i = 0; tmsvrargs->tmdsptchtbl[i].funcname != NULL; i++ )
+	{
+		if ( !strcmp(tmsvrargs->tmdsptchtbl[i].funcname, "PERL") )
+		{
+				gdispatch = tmsvrargs->tmdsptchtbl[i].svcfunc;
+				break;
+		}
+	}
+	
+}
 
 
-/*--------------------------------------------------------------------------------
+/*-----------------------------------------------------------------------------
  * xsub functions 
- *--------------------------------------------------------------------------------*/
+ *----------------------------------------------------------------------------*/
 MODULE = Tuxedo    PACKAGE = Tuxedo        
 
 BOOT:
     InitTuxedoConstants();
-    signum_init();
-
 
 
 long
@@ -401,7 +422,7 @@ tpadvertise( svcname, callback )
     SV * callback
     PREINIT:
     CODE:
-        RETVAL = tpadvertise( svcname, PERL );
+        RETVAL = tpadvertise( svcname, gdispatch );
         if ( RETVAL != -1 )
         {
             if ( serviceMap == (HV*)NULL )
@@ -1042,8 +1063,6 @@ tpacall( svc, idata, ilen, flags )
     CHAR_PTR idata
     long ilen
     long flags
-    PREINIT:
-    char *inbuf;
     CODE:
         RETVAL = tpacall( svc, idata, ilen, flags );
     OUTPUT:
@@ -1329,7 +1348,7 @@ value( obj, ... )
             if ( size == -1 )
 	        croak( "STRING_PTR::value() failed: %s", tpstrerror(tperrno) );
 
-            if ( size <= strlen(value) )
+            if ( size <= (long)strlen(value) )
             {
                 /* need to allocate more space */
                 obj = tprealloc( obj, strlen(value) + 1 );
@@ -1497,7 +1516,6 @@ clientdata( obj, ... )
     CLIENTID_PTR obj
     PREINIT:
         long arraysize;
-        AV * clientdata;
         int i;
     PPCODE:
         arraysize = sizeof(obj->clientdata)/sizeof(long);
@@ -1762,11 +1780,9 @@ failurequeue( obj, ... )
 void 
 cltid( obj, ... )
     TPQCTL_PTR obj
-    PREINIT:
-    SV * sv;
     CODE:
         ST(0) = sv_newmortal();
-	sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
+		sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
         SvREFCNT_inc( SvRV(ST(0)) );
 
 
@@ -1887,11 +1903,9 @@ name2( obj, ... )
 void 
 qctl( obj, ... )
     TPEVCTL_PTR obj
-    PREINIT:
-    SV * sv;
     CODE:
         ST(0) = sv_newmortal();
-	sv_setref_pv(ST(0), "TPQCTL_PTR", (void*)&obj->qctl);
+		sv_setref_pv(ST(0), "TPQCTL_PTR", (void*)&obj->qctl);
         SvREFCNT_inc( SvRV(ST(0)) );
 
 MODULE = Tuxedo        PACKAGE = TXINFO_PTR
@@ -1923,11 +1937,9 @@ DESTROY( obj )
 void 
 xid( obj, ... )
     TXINFO_PTR obj
-    PREINIT:
-    SV * sv;
     CODE:
         ST(0) = sv_newmortal();
-	sv_setref_pv(ST(0), "XID_PTR", (void*)&obj->xid);
+		sv_setref_pv(ST(0), "XID_PTR", (void*)&obj->xid);
         SvREFCNT_inc( SvRV(ST(0)) );
 
 long 
@@ -1975,8 +1987,6 @@ MODULE = Tuxedo        PACKAGE = TPSVCINFO_PTR
 void 
 data( obj )
     TPSVCINFO_PTR obj
-    PREINIT:
-    SV * sv;
     CODE:
         ST(0) = sv_newmortal();
         buffer_setref( ST(0), obj->data );
@@ -2024,10 +2034,8 @@ appkey( obj )
 void 
 cltid( obj )
     TPSVCINFO_PTR obj
-    PREINIT:
-    SV * sv;
     CODE:
         ST(0) = sv_newmortal();
-	sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
+		sv_setref_pv(ST(0), "CLIENTID_PTR", (void*)&obj->cltid);
         SvREFCNT_inc( SvRV(ST(0)) );
 

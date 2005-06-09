@@ -1,6 +1,7 @@
 Changes
 MANIFEST
 Makefile.PL
+mainexit.h
 Tuxedo.pm
 Tuxedo.xs
 TuxedoConstants.c

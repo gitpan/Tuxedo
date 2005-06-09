@@ -23,6 +23,8 @@ require "genubbconfig.pl";
 # script will connect to as a workstation tuxedo client.
 ###################################################################
 tuxputenv( "TUXCONFIG=" . get_tuxconfig() );
+$path = tuxgetenv( "PATH" );
+tuxputenv( "PATH=$path;./blib/arch/auto/Tuxedo" );
 system( "tmshutdown -y" );
 
 gen_ubbconfig();
